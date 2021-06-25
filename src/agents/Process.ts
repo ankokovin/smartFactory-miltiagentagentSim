@@ -133,9 +133,6 @@ export default class Process implements IAgent {
     plan() {
         let possibleProductionAgents = this.selectedProductionRobot ? [this.selectedProductionRobot] : this.announceToProductionAgents()
         if (possibleProductionAgents.length === 0) return;
-        if (isProcess(this.source)) {
-            console.log("huh?")
-        }
         let logisticRobots = this.announceToLogisticRobots()
         if (logisticRobots.length === 0) return
         if (logisticRobots.length < this.currentInputs.length) {
