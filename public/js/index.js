@@ -16,7 +16,8 @@ socket.onmessage = function (message) {
         || data.topic === 'customer' 
         || data.topic === 'logisticRobots' 
         || data.topic === 'productionRobots' 
-        || data.topic === 'provider') {
+        || data.topic === 'provider' 
+        || data.topic === 'holders') {
         handleAgents(data.content)
     }
     if (data.topic === 'orders') {

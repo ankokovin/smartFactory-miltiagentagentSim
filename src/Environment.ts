@@ -44,6 +44,8 @@ export default class Environment {
     holders: Holder[] = [];
     Designer: Designer;
 
+    getCleanHolders = () => this.holders.filter(item => isHolder(item))
+
     constructor(setting : EnvironmentSettings) {
         this.log = (topic: string, content :any) => setting.logFunction(<Message> {topic, content});
         this.iter = setting.iterCount
@@ -54,7 +56,7 @@ export default class Environment {
         const getHolders = () => this.holders
         const getLogisiticRobots = () => this.logisticRobots.filter(robot => !robot.target)
         const getCustomer = () => this.customer[0]
-        const getCleanHolders = () => this.holders.filter(item => isHolder(item))
+        
 
         const createProcess : CreateNewProcesses = (input, parentProcess) => {
             if (!isDetailType(input.type)) {
@@ -75,7 +77,7 @@ export default class Environment {
                 getLogisiticRobots,
                 getCustomer,
                 createProcess, 
-                getCleanHolders)
+                this.getCleanHolders)
             this.processes.push(newProcess)
             this.agents.push(newProcess)
             return newProcess
@@ -98,7 +100,7 @@ export default class Environment {
                     getLogisiticRobots,
                     getCustomer,
                     createProcess,
-                    getCleanHolders) 
+                    this.getCleanHolders) 
                 this.processes.push(process)
                 this.agents.push(process)
                 return process
@@ -155,6 +157,7 @@ export default class Environment {
                 });
                 this.log('logisticRobots', this.logisticRobots);
                 this.log('productionRobots', this.productionRobots);
+                this.log('holders', this.getCleanHolders());
                 this.log('provider', this.provider);
                 this.log('customer', this.customer);
             }
