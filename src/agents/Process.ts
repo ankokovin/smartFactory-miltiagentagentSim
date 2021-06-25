@@ -159,6 +159,11 @@ export default class Process implements IAgent {
                                     .filter(item => isDetailType(item.type))
                                     .map(item => this.createNewProcesses(item, this))
             this.childProcessesCount = childProcesses.length
+            if (this.selectedProductionRobot) {
+                this.selectedProductionRobot.isBusy = false
+                this.selectedProductionRobot = undefined
+            }
+            this.isAwaitingPlanning = true
             return;
         }
         console.log("enought resources: ", this.id)
