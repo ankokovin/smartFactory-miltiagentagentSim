@@ -5,8 +5,6 @@ import LogisticRobot from "./agents/LogisticRobot";
 import Order, { isOrder } from "./data/Order";
 import ResourceType from "./data/types/ResourceType";
 
-import {default as ResourceTypes} from "./json/ResourceTypes.json";
-import {default as DetailTypes} from "./json/DetailTypes.json";
 import DetailType, { isDetailType } from "./data/types/DetailType";
 import ProcessType from "./data/types/ProcessType";
 import Provider from "./agents/Provider";
@@ -168,10 +166,11 @@ export default class Environment {
     }
 
     loadTypes(){
+        const resourceTypes : ResourceType[] = new Array(5).fill({}).map((_, index) => {return {id:index.toString()}})
+        const detailTypes : DetailType[] = new Array(5).fill({}).map((_, index) => new DetailType(index.toString()))
         this.resourceTypes = [
-            ...ResourceTypes, 
-            ...DetailTypes
-                .map(t => new DetailType(t.id))
+            ...resourceTypes, 
+            ...detailTypes
             ]
     }
 
