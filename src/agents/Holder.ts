@@ -1,6 +1,8 @@
+import Detail from "../data/material/Detail";
 import Resource from "../data/material/Resource";
 import Point from "../data/Point";
 import ProcessInput from "../data/process/ProcessInput";
+import { isDetailType } from "../data/types/DetailType";
 import ResourceType from "../data/types/ResourceType";
 import IAgent from "../interfaces/IAgent";
 import ILocatable from "../interfaces/ILocatable";
