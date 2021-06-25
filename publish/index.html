@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart factory</title>
+    <link href="css/index.css" rel="stylesheet">
+    <script src="js/index.js" defer></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="text-center">
+        <div class="container">
+            <div class="row">
+                <h1>Smart factory</h1>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <button id="start" class="btn btn-primary" onclick="start()">Start</button>
+                </div>
+                <div class="col">
+                    <button id="stop" class="btn btn-danger" disabled onclick="stop()">Stop</button>
+
+                </div>
+                <div class="col">
+                    <p>Current turn: <span id="turn"></span></p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <input type="range" id="delay" name="delay" min="1" max="1000" value="100" />
+                    <label for="delay">Delay <span id="delay-value">100</span></label>
+                    <input type="checkbox" name="noDelay" id="noDelay" class="form-check-input" >
+                </div>
+                
+                <div class="col">
+                    <input type="number" name="ProductionRobot" id="ProductionRobot" value="3" min="1" max="100">
+                    <label for="ProductionRobot">ProductionRobot count</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <input type="number" name="iter" id="iter" value="200">
+                    <label for="iter">Iteration count</label>
+                </div>
+
+                <div class="col">
+                    <input type="number" name="LogisticRobot" id="LogisticRobot" value="3" min="1" max="100">
+                    <label for="LogisticRobot">LogisticRobot count</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <input type="range" name="orderProbability" id="orderProbability" value = "0.05" min="0.001", max="0.5", step="0.001">
+                    <label for="orderProbability">Order probability <span id="orderProbability-value">0.05</span></label>
+                </div>
+                <div class="col">
+                    <input type="number" name="LogisticRobotSpeed" id="LogisticRobotSpeed" value="100">
+                    <label for="LogisticRobotSpeed">LogisticRobot speed</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <canvas id="state" width="1000" height="1000"></canvas>
+                </div>
+                <div class="col">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item">
+                          <button   class="nav-link active" 
+                                    id="orders-tab" 
+                                    data-bs-toggle="tab" 
+                                    data-bs-target="#orders" 
+                                    type="button" 
+                                    role="tab" 
+                                    aria-controls="orders" 
+                                    aria-selected="true">Orders</button>
+                        </li>
+                        <li class="nav-item">
+                            <button   class="nav-link" 
+                            id="processes-tab" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#processes" 
+                            type="button" 
+                            role="tab" 
+                            aria-controls="processes" 
+                            aria-selected="true">Processes</button>
+                        </li>
+                      </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="orders" role="tabpanel" aria-labelledby="order-tab">
+                            <p>Total: <span id="orders-total"></span></p>
+                            <p>Done: <span id="orders-done"></span></p>
+                        </div>
+                        <div class="tab-pane fade" id="processes" role="tabpanel" aria-labelledby="processes-tab">
+                            <div>
+                                <h2>All</h2>
+                                <p>Total: <span id="processes-total"></span></p>
+                                <p>Started: <span id="processes-started"></span></p>
+                                <p>Manufatured: <span id="processes-manufatured"></span></p>
+                                <p>Done: <span id="processes-done"></span></p>
+                            </div>
+                            <div>
+                                <h2>primitive</h2>
+                                <p>Total: <span id="processes-primitive-total"></span></p>
+                                <p>Started: <span id="processes-primitive-started"></span></p>
+                                <p>Manufatured: <span id="processes-primitive-manufatured"></span></p>
+                                <p>Done: <span id="processes-primitive-done"></span></p>
+                            </div>
+                            <div>
+                                <h2>simple</h2>
+                                <p>Total: <span id="processes-simple-total"></span></p>
+                                <p>Started: <span id="processes-simple-started"></span></p>
+                                <p>Manufatured: <span id="processes-simple-manufatured"></span></p>
+                                <p>Done: <span id="processes-simple-done"></span></p>
+                            </div>
+                            <div>
+                                <h2>parents</h2>
+                                <p>Total: <span id="processes-parents-total"></span></p>
+                                <p>Started: <span id="processes-parents-started"></span></p>
+                                <p>Manufatured: <span id="processes-parents-manufatured"></span></p>
+                                <p>Done: <span id="processes-parents-done"></span></p>
+                            </div>
+                            <div>
+                                <h2>children</h2>
+                                <p>Total: <span id="processes-children-total"></span></p>
+                                <p>Started: <span id="processes-children-started"></span></p>
+                                <p>Manufatured: <span id="processes-children-manufatured"></span></p>
+                                <p>Done: <span id="processes-children-done"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col"> 
+                    <h4>Legend</h4>
+                    <ul class="list-group" id="legend">
+
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

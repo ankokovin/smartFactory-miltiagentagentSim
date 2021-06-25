@@ -5,6 +5,7 @@ import * as path from 'path';
 import {default as open} from 'open';
 
 import Environment from './src/Environment';
+import { handleMessage } from './src/utils';
 
 const app = express.default()
 const port = 3000
@@ -28,33 +29,7 @@ wss.on('connection', (ws: WebSocket) => {
 
     //connection is up, let's add a simple simple event
     ws.on('message', (message: any) => {
-
-        //log the received message and send it back to the client
-        console.log('received: %s', message);
-
-        const data = JSON.parse(message);
-        if (data.isStart) {
-            if (environment) {
-                environment.stop()
-            }
-            environment = new Environment({
-                logFunction: messageFn,
-                delay: data.delay,
-                iterCount: data.iter,
-                logisticRobotCount: data.logisticRobotCount,
-                productionRobotCount: data.productionRobotCount,
-                orderProbability: data.orderProbability,
-                logisticRobotSpeed: data.logisticRobotSpeed
-            })
-            environment.run()
-                .then(() => messageFn({topic: "Done"}))
-        }
-        else if (data.isStop) {
-            environment.stop()
-        }
-        else if (data.delay || data.delay === 0) {
-            environment.delayMs = data.delay
-        }
+        environment = handleMessage(message, environment, messageFn)
     });
 });
 
