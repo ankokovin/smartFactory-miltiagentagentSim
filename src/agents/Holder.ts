@@ -33,15 +33,15 @@ export default class Holder implements IAgent, ILocatable {
             return null
         }
         let res : Resource
-        if (val < targetQuantity) {
-            res = new Resource(this.position, r, targetQuantity)
-            if (val - targetQuantity != 0) {
+        const getRes = (quantity: number) => {
+            if (isDetailType(r)) return new Detail(this.position, r, quantity)
+            return new Resource(this.position, r, quantity)
+        }  
+        if (val > targetQuantity) {
+            res = getRes(targetQuantity)
                 this.resources.set(r.id, val - targetQuantity)
             } else {
-                this.resources.delete(r.id)
-            }
-        } else {
-            res = new Resource(this.position, r, val)
+            res = getRes(val)
             this.resources.delete(r.id)
         }
         return res
