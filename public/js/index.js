@@ -182,7 +182,7 @@ let oSpeeedVal = document.getElementById('delay-value')
 odelay.addEventListener('change', (event) => {
     oSpeeedVal.textContent = event.target.value;
     if (started) {
-        socket.send(JSON.stringify({delay: 1000 - new Number(event.target.value)}))
+        socket.send(JSON.stringify({delay: new Number(event.target.value)}))
     }
 });
 let oNoDelay = document.getElementById('noDelay')
