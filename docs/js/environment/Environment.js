@@ -121,8 +121,8 @@ export default class Environment {
         });
     }
     loadTypes() {
-        const resourceTypes = new Array(5).fill({}).map((_, index) => { return { id: index.toString() }; });
-        const detailTypes = new Array(5).fill({}).map((_, index) => new DetailType(index.toString()));
+        const resourceTypes = new Array(5).fill({}).map((_, index) => { return { id: `ResourceType-${index}` }; });
+        const detailTypes = new Array(5).fill({}).map((_, index) => new DetailType(`DetailType-${index}`));
         this.resourceTypes = [
             ...resourceTypes,
             ...detailTypes
