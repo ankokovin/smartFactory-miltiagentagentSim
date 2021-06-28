@@ -7,6 +7,12 @@ let ctx = canvas.getContext('2d');
 let Environment = null
 let send = null
 let env = null
+let logisticRobots = []
+let productionRobots = []
+let customers = []
+let providers = []
+let holders = []
+let drawId = null
 import('./environment/Environment.js')
     .then(x => {
         Environment = x.default
@@ -23,23 +29,27 @@ import('./environment/Environment.js')
         send = (message) => socket.send(message)
     })
 
-
-
-
 function onNewMessage(message) {
     console.log(message);
     let data = JSON.parse(message.data)
     if (data.topic === 'iteration') {
-        clear()
+        //clear()
         document.getElementById('turn').innerText = `${data.content.current}/${data.content.total}`
     }
-    if (data.topic === 'agents' 
-        || data.topic === 'customer' 
-        || data.topic === 'logisticRobots' 
-        || data.topic === 'productionRobots' 
-        || data.topic === 'provider' 
-        || data.topic === 'holders') {
-        handleAgents(data.content)
+    if (data.topic === 'customer') {
+        handleCustomer(data.content)
+    }
+    if (data.topic === 'logisticRobots') {
+        handleLogisticRobots(data.content)
+    } 
+    if (data.topic === 'productionRobots') {
+        handleProductionRobots(data.content)
+    } 
+    if (data.topic === 'provider') {
+        handleProviders(data.content)
+    } 
+    if (data.topic === 'holders') {
+        handleHolders(data.content)
     }
     if (data.topic === 'orders') {
         handleOrders(data.content)
@@ -48,6 +58,7 @@ function onNewMessage(message) {
         handleProcesses(data.content)
     }
     if (data.topic === 'Done') {
+        cancelAnimationFrame(drawId)
         clear()
         toggleDissabled()
     }
@@ -82,17 +93,45 @@ function start() {
     let config = {delay, iter, productionRobotCount, logisticRobotCount, orderProbability, logisticRobotSpeed, isStart:true}
     send(JSON.stringify(config));
     toggleDissabled()
+    drawId = requestAnimationFrame(draw)
+}
+
+function draw() {
+    let agents = [...logisticRobots, ...productionRobots, ...customers, ...providers, ...holders]
+    clear()
+    drawAgents(agents);
+    drawId = requestAnimationFrame(draw);
 }
 
 function stop() {
     send(JSON.stringify({isStop: true}))
     toggleDissabled()
+    cancelAnimationFrame(drawId)
 }
 
-function handleAgents(agents) {
-    console.log(agents)
-    drawAgents(agents)
-    legend(agents)
+function handleCustomer(nCustomers) {
+    customers = nCustomers;
+    legend(customers)
+}
+
+function handleLogisticRobots(nLogisticRobots) {
+    logisticRobots = nLogisticRobots;
+    legend(logisticRobots)
+}
+
+function handleProductionRobots(nProductionRobots) {
+    productionRobots = nProductionRobots;
+    legend(productionRobots)
+}
+
+function handleProviders(nProviders) {
+    providers = nProviders;
+    legend(providers)
+}
+
+function handleHolders(nHolders) {
+    holders = nHolders;
+    legend(holders)
 }
 
 function getAgentStyle(type) {
@@ -136,7 +175,6 @@ function drawAgents(agents) {
 }
 
 function drawAgent(agent) {
-    console.log(agent)
     const size = getAgentSize(agent.type);
     const point = agent.point;
     ctx.fillStyle = getAgentStyle(agent.type);
