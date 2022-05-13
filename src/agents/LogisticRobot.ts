@@ -46,7 +46,7 @@ export default class LogisticRobot implements IAgent, IMoveable{
     handleProcessAnnouncement: EventHandler = (time, addNewEvent, process) => {
         if (!isProcess(process)) return
         addNewEvent({
-            time: time + 1,
+            time: time + getRandomNumber(this.communicationDelay),
             object: new LogisticRobotBusyReply(!this.isBusy && !this.source, this.id),
             eventHandler: process.handleLogisticAgentAnnouncementResponse
         })

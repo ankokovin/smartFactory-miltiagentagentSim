@@ -25,7 +25,7 @@ import { getRandomNumber } from "./data/RandomInterval.js";
 import { ProductModelCreationMap, ProductModelCreationMapReset } from "./data/ProductModel.js";
 import ProductModelEnum from "./data/ProductModelEnum.js";
 export default class Environment {
-    constructor(setting) {
+    constructor(settings) {
         this.orders = [];
         this.newOrders = [];
         this.resourceTypes = [];
@@ -41,27 +41,27 @@ export default class Environment {
         this.designers = [];
         this.getCleanHolders = () => this.holders.filter(item => isHolder(item));
         this.halt = false;
-        this.log = (topic, content) => setting.logFunction({ topic, content });
-        this.iter = setting.iterCount;
+        this.log = (topic, content) => settings.logFunction({ topic, content });
+        this.iter = settings.iterCount;
         this.log('debug', 'Creating environment');
-        this.loadTypes(setting.detailTypeCount, setting.resourceTypeCount);
+        this.loadTypes(settings.detailTypeCount, settings.resourceTypeCount);
         ProductModelCreationMapReset();
         resetDesignsCounts();
         const getHolders = () => this.holders;
         const getLogisiticRobots = () => this.logisticRobots;
         const getCustomer = () => this.customer[0];
         this.ProcessMaker = new ProcessMaker(() => this.resourceTypes, (processType) => this.processTypes.push(processType), () => this.processTypes, (ProcessData, time) => {
-            const process = new Process(ProcessData.quantity, ProcessData.type, ProcessData.source, () => this.productionRobots, getHolders, getLogisiticRobots, getCustomer, createProcess, setting.defaultCommunicationDelay, setting.defaultInternalEventDelay, setting.processRandomParam);
+            const process = new Process(ProcessData.quantity, ProcessData.type, ProcessData.source, () => this.productionRobots, getHolders, getLogisiticRobots, getCustomer, createProcess, settings.defaultCommunicationDelay, settings.defaultInternalEventDelay, settings.processRandomParam);
             this.processes.push(process);
             this.agents.push(process);
             if (this.addNewEventHandler) {
                 this.addNewEventHandler({
-                    time: time + getRandomNumber(setting.defaultInternalEventDelay),
+                    time: time + getRandomNumber(settings.defaultInternalEventDelay),
                     eventHandler: process.start
                 });
             }
             return process;
-        }, (capability) => this.capabilities.push(capability), () => this.productionRobotTypes, setting.processMakerRandomParams);
+        }, (capability) => this.capabilities.push(capability), () => this.productionRobotTypes, settings.processMakerRandomParams);
         const createProcess = (input, parentProcess, time) => {
             if (!isDetailType(input.type)) {
                 throw new Error();
@@ -70,29 +70,29 @@ export default class Environment {
             if (!processType) {
                 processType = this.ProcessMaker.createPrimitiveProcess(input.type);
             }
-            const newProcess = new Process(input.quantity, processType, parentProcess, () => this.productionRobots, getHolders, getLogisiticRobots, getCustomer, createProcess, setting.defaultCommunicationDelay, setting.defaultInternalEventDelay, setting.processRandomParam);
+            const newProcess = new Process(input.quantity, processType, parentProcess, () => this.productionRobots, getHolders, getLogisiticRobots, getCustomer, createProcess, settings.defaultCommunicationDelay, settings.defaultInternalEventDelay, settings.processRandomParam);
             this.processes.push(newProcess);
             this.agents.push(newProcess);
             if (this.addNewEventHandler) {
                 this.addNewEventHandler({
-                    time: time + getRandomNumber(setting.defaultInternalEventDelay),
+                    time: time + getRandomNumber(settings.defaultInternalEventDelay),
                     eventHandler: newProcess.start
                 });
             }
             return newProcess;
         };
-        this.OrderPlanningQueue = new OrderPlanningQueue(() => this.designers, setting.defaultCommunicationDelay);
-        this.designers = new Array(setting.plannerCount).fill({})
-            .map(() => new Designer(() => this.OrderPlanningQueue, () => this.ProcessMaker, setting.defaultCommunicationDelay, setting.plannerDurations));
+        this.OrderPlanningQueue = new OrderPlanningQueue(() => this.designers, settings.defaultCommunicationDelay);
+        this.designers = new Array(settings.plannerCount).fill({})
+            .map(() => new Designer(() => this.OrderPlanningQueue, () => this.ProcessMaker, settings.defaultCommunicationDelay, settings.plannerDurations));
         this.agents = [
-            ...this.createCustomer(setting.defaultCommunicationDelay, setting.customerNewOrderDelay, setting.startOrderProportion),
+            ...this.createCustomer(settings.defaultCommunicationDelay, settings.customerNewOrderDelay, settings.startOrderProportion),
             ...this.designers,
-            ...this.createProviders(setting.defaultCommunicationDelay),
-            ...this.createHolders(setting.holderCount, setting.defaultCommunicationDelay),
-            ...this.createLogisticRobots(setting.logisticRobotArgs, setting.defaultInternalEventDelay, setting.defaultCommunicationDelay),
-            ...this.createProductionRobots(setting.productionRobotArgs, setting.defaultCommunicationDelay),
+            ...this.createProviders(settings.defaultCommunicationDelay, settings.providerArgs),
+            ...this.createHolders(settings.holderCount, settings.defaultCommunicationDelay),
+            ...this.createLogisticRobots(settings.logisticRobotArgs, settings.defaultInternalEventDelay, settings.defaultCommunicationDelay),
+            ...this.createProductionRobots(settings.productionRobotArgs, settings.defaultCommunicationDelay),
         ];
-        this.delayMs = setting.delay;
+        this.delayMs = settings.delay;
     }
     run() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -198,8 +198,8 @@ export default class Environment {
             .map(() => new LogisticRobot(args.speed, internalEventDelay, defaultCommunicationDelay));
         return this.logisticRobots;
     }
-    createProviders(defaultCommunicationDelay) {
-        const provider = new Provider(() => this.holders, () => this.processes, (id) => this.resourceTypes.find(type => type.id === id), defaultCommunicationDelay);
+    createProviders(defaultCommunicationDelay, args) {
+        const provider = new Provider(() => this.holders, () => this.processes, (id) => this.resourceTypes.find(type => type.id === id), defaultCommunicationDelay, args);
         this.holders.push(provider);
         this.provider.push(provider);
         return [provider];

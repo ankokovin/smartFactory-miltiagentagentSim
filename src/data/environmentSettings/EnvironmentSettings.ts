@@ -6,6 +6,7 @@ import ProcessMakerRandomParams from "./ProcessMakerRandomParams";
 import ProcessRandomParam from "./ProcessRandomParams";
 import StartOrderProportion from "./StartOrderProportion";
 import LogisticRobotArgs from "./LogisticRobotArgs";
+import ProviderArgs from "./ProviderArgs";
 
 type LogFunction = (a: Message) => void;
 
@@ -25,5 +26,6 @@ export default interface EnvironmentSettings {
     plannerCount: number,
     plannerDurations: Map<ProductModelEnum, RandomInterval>,
     detailTypeCount: number,
-    resourceTypeCount: number
+    resourceTypeCount: number,
+    providerArgs: ProviderArgs
 }

@@ -1,4 +1,5 @@
 import { EventHandler } from "../data/AgentEvent";
+import ProviderArgs from "../data/environmentSettings/ProviderArgs";
 import Resource from "../data/material/Resource";
 import ResourceOrder from "../data/material/ResourceOrder";
 import Point from "../data/Point";
@@ -22,6 +23,7 @@ export default class Provider extends Holder implements IAgent, ILocatable {
         getProcesses: getProcesses, 
         getResourceTypeById: getResourceTypeById,
         communicationDelay: RandomInterval,
+        providerArgs: ProviderArgs,
         position? : Point) {
         super(communicationDelay);
         this.id = `Provider-${++idx}`
@@ -31,11 +33,11 @@ export default class Provider extends Holder implements IAgent, ILocatable {
         this.getResourceTypeById = getResourceTypeById;
         this.currentSupply = new Map();
         this.expectingHolderAnswers = false
+        this.providerArgs = providerArgs
     }
     id: string;
     expectingHolderAnswers: boolean
-    safety_multiplyer = 1.2;
-
+    private providerArgs: ProviderArgs
     checkOrders: EventHandler = (time, addNewEvent) => {
         this.currentSupply.clear()
         this.expectingHolderAnswers = true
@@ -46,19 +48,15 @@ export default class Provider extends Holder implements IAgent, ILocatable {
                 eventHandler: holder.handleProviderQuery
             }))
         addNewEvent({
-            time: time + 10,
+            time: time + getRandomNumber(this.providerArgs.supplyQueryTimeout),
             eventHandler: this.createNewSupplyOrders
-        })
-        addNewEvent({
-            time: time + 20,
-            eventHandler: this.checkOrders
         })
     }
 
     private createNewSupplyOrder(typeId: string, reqCount: number): ResourceOrder {
         const type = this.getResourceTypeById(typeId)
         if (!type) throw Error('unexpected typeId ' + typeId)
-        const quantity = reqCount * this.safety_multiplyer
+        const quantity = reqCount * this.providerArgs.safetyMultiplyer
         return new ResourceOrder(
             `supply order ${++idx}`,
             type,
@@ -72,10 +70,14 @@ export default class Provider extends Holder implements IAgent, ILocatable {
             .map(([typeId, count]) => this.createNewSupplyOrder(typeId, count))
         this.resourceOrders = [...this.resourceOrders, ...newSupplyOrders]
         newSupplyOrders.forEach(order => addNewEvent({
-            time: time + 5,
+            time: time + getRandomNumber(this.providerArgs.supplyOrderDuration),
             eventHandler: this.handleSupplyOrderCame,
             object: order
         }))
+        addNewEvent({
+            time: time + getRandomNumber(this.providerArgs.supplyOrderTimeout),
+            eventHandler: this.checkOrders
+        })
     }
 
     handleSupplyOrderCame: EventHandler = (_time, _addNewEvent, supOrder) => {

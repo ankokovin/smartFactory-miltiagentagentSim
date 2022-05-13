@@ -27,6 +27,7 @@ import ProductModelEnum from './data/ProductModelEnum';
 import ProductionRobotArgs from './data/environmentSettings/ProductionRobotArgs';
 import StartOrderProportion from './data/environmentSettings/StartOrderProportion';
 import LogisticRobotArgs from './data/environmentSettings/LogisticRobotArgs';
+import ProviderArgs from './data/environmentSettings/ProviderArgs';
 
 export type AddOrderToEnv = (a: Order, t: Time) => void;
 
@@ -60,11 +61,11 @@ export default class Environment {
     getCleanHolders = () => this.holders.filter(item => isHolder(item))
     halt = false;
 
-    constructor(setting : EnvironmentSettings) {
-        this.log = (topic: string, content :any) => setting.logFunction(<Message> {topic, content});
-        this.iter = setting.iterCount
+    constructor(settings : EnvironmentSettings) {
+        this.log = (topic: string, content :any) => settings.logFunction(<Message> {topic, content});
+        this.iter = settings.iterCount
         this.log('debug','Creating environment')
-        this.loadTypes(setting.detailTypeCount, setting.resourceTypeCount)
+        this.loadTypes(settings.detailTypeCount, settings.resourceTypeCount)
 
         ProductModelCreationMapReset()
         resetDesignsCounts()
@@ -88,15 +89,15 @@ export default class Environment {
                     getLogisiticRobots,
                     getCustomer,
                     createProcess,
-                    setting.defaultCommunicationDelay,
-                    setting.defaultInternalEventDelay,
-                    setting.processRandomParam
+                    settings.defaultCommunicationDelay,
+                    settings.defaultInternalEventDelay,
+                    settings.processRandomParam
                     ) 
                 this.processes.push(process)
                 this.agents.push(process)
                 if (this.addNewEventHandler) {
                     this.addNewEventHandler({
-                        time: time + getRandomNumber(setting.defaultInternalEventDelay),
+                        time: time + getRandomNumber(settings.defaultInternalEventDelay),
                         eventHandler: process.start 
                     })
                 }
@@ -104,7 +105,7 @@ export default class Environment {
             }, 
             (capability) => this.capabilities.push(capability),
             () => this.productionRobotTypes,
-            setting.processMakerRandomParams
+            settings.processMakerRandomParams
         )
 
         const createProcess : CreateNewProcesses = (input, parentProcess, time) => {
@@ -124,14 +125,14 @@ export default class Environment {
                 getLogisiticRobots,
                 getCustomer,
                 createProcess,
-                setting.defaultCommunicationDelay,
-                setting.defaultInternalEventDelay,
-                setting.processRandomParam)
+                settings.defaultCommunicationDelay,
+                settings.defaultInternalEventDelay,
+                settings.processRandomParam)
             this.processes.push(newProcess)
             this.agents.push(newProcess)
             if (this.addNewEventHandler) {
                 this.addNewEventHandler({
-                    time: time + getRandomNumber(setting.defaultInternalEventDelay),
+                    time: time + getRandomNumber(settings.defaultInternalEventDelay),
                     eventHandler: newProcess.start 
                 })
             }
@@ -140,28 +141,28 @@ export default class Environment {
 
         this.OrderPlanningQueue = new OrderPlanningQueue(
             () => this.designers,
-            setting.defaultCommunicationDelay
+            settings.defaultCommunicationDelay
         )
-        this.designers = new Array(setting.plannerCount).fill({})
+        this.designers = new Array(settings.plannerCount).fill({})
             .map(() => new Designer(
                 () => this.OrderPlanningQueue, 
                 () => this.ProcessMaker,
-                setting.defaultCommunicationDelay, 
-                setting.plannerDurations))
+                settings.defaultCommunicationDelay, 
+                settings.plannerDurations))
 
             
         this.agents = [
-            ...this.createCustomer(setting.defaultCommunicationDelay, setting.customerNewOrderDelay, setting.startOrderProportion),
+            ...this.createCustomer(settings.defaultCommunicationDelay, settings.customerNewOrderDelay, settings.startOrderProportion),
             ...this.designers,
-            ...this.createProviders(setting.defaultCommunicationDelay),
-            ...this.createHolders(setting.holderCount, setting.defaultCommunicationDelay),
+            ...this.createProviders(settings.defaultCommunicationDelay, settings.providerArgs),
+            ...this.createHolders(settings.holderCount, settings.defaultCommunicationDelay),
             ...this.createLogisticRobots(
-                    setting.logisticRobotArgs, 
-                    setting.defaultInternalEventDelay, 
-                    setting.defaultCommunicationDelay),
-            ...this.createProductionRobots(setting.productionRobotArgs, setting.defaultCommunicationDelay),    
+                    settings.logisticRobotArgs, 
+                    settings.defaultInternalEventDelay, 
+                    settings.defaultCommunicationDelay),
+            ...this.createProductionRobots(settings.productionRobotArgs, settings.defaultCommunicationDelay),    
         ]
-        this.delayMs = setting.delay;
+        this.delayMs = settings.delay;
     }
 
     async run() {
@@ -279,12 +280,13 @@ export default class Environment {
         return this.logisticRobots
     }
 
-    createProviders(defaultCommunicationDelay: RandomInterval) : Provider[] {
+    createProviders(defaultCommunicationDelay: RandomInterval, args: ProviderArgs) : Provider[] {
         const provider = new Provider(
             () => this.holders,
             () => this.processes,
             (id) => this.resourceTypes.find(type => type.id === id),
-            defaultCommunicationDelay)
+            defaultCommunicationDelay, 
+            args)
         this.holders.push(provider)
         this.provider.push(provider)
         return [provider]

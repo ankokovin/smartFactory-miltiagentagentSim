@@ -1,5 +1,6 @@
 import LogisticRobotArgs from "./data/environmentSettings/LogisticRobotArgs";
 import ProductionRobotArgs from "./data/environmentSettings/ProductionRobotArgs";
+import ProviderArgs from "./data/environmentSettings/ProviderArgs";
 import StartOrderProportion from "./data/environmentSettings/StartOrderProportion";
 import ProductModelEnum from "./data/ProductModelEnum";
 import RandomInterval from "./data/RandomInterval";
@@ -70,6 +71,7 @@ export function handleMessage(message: string, environment: Environment, message
             })(),
             detailTypeCount: data.detailTypeCount,
             resourceTypeCount: data.resourceTypeCount,
+            providerArgs: <ProviderArgs>data.provider,
         })
         env.run()
             .then(() => messageFn({topic: "Done"}))

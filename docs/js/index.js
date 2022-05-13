@@ -82,8 +82,6 @@ function onNewMessage(message) {
         handleDesignDone(Object.fromEntries(data.content))
     }
     if (data.topic === 'Done') {
-        cancelAnimationFrame(drawId)
-        clear()
         toggleDissabled()
     }
 }
@@ -91,13 +89,9 @@ function onNewMessage(message) {
 let started = false
 
 function toggleDissabled() {
-    document.getElementById('start').toggleAttribute('disabled')
-    document.getElementById('stop').toggleAttribute('disabled')
-    document.getElementById('HolderCount').toggleAttribute('disabled')
-    document.getElementById('iter').toggleAttribute('disabled')
-    document.getElementById('ProductionRobot').toggleAttribute('disabled')
-    document.getElementById('LogisticRobot').toggleAttribute('disabled')
-    document.getElementById('noDelay').toggleAttribute('disabled')
+    document.querySelectorAll('.toggle-disabled').forEach(element => {
+        element.toggleAttribute('disabled')
+    })
     started = !started
 }
 
@@ -167,6 +161,12 @@ function getConfig() {
             responseTimeoutDelay:   getStartEndTime('processResponseTimeoutDelay'),
             planRetryDelay:         getStartEndTime('processPlanRetryDelay')
         },
+        provider: {
+            safetyMultiplyer: getNumber('providerSafetyMultiplyer'),
+            supplyQueryTimeout: getStartEndTime('providerSupplyQueryTimeout'),
+            supplyOrderDuration: getStartEndTime('providerSupplyOrderDuration'),
+            supplyOrderTimeout: getStartEndTime('providerSupplyOrderTimeout'),
+        },
         planner: {
             duration: {
                 text: getStartEndTime('textModelDuration'),
@@ -182,9 +182,11 @@ function getConfig() {
 
 function start() {
     let config = getConfig()
-    console.log(config)
+    console.log('Started config', config)
     send(JSON.stringify(config));
     toggleDissabled()
+    cancelAnimationFrame(drawId)
+    clear()
     drawId = requestAnimationFrame(draw)
 }
 
@@ -197,7 +199,6 @@ function draw() {
 
 function stop() {
     send(JSON.stringify({isStop: true}))
-    toggleDissabled()
     cancelAnimationFrame(drawId)
 }
 
@@ -304,17 +305,13 @@ function legend(agents) {
 
 
 function handleOrders(orders) {
-    console.log(orders);
     document.getElementById('orders-total').innerText = new String(orders.total);
     document.getElementById('orders-done').innerText = new String(orders.done);
 }
 
 function handleProcesses(processes) {
-    console.log(processes);
-
     function handle(category, processes) {
         const idPrefix = `processes${category ? '-' + category : ''}`
-        console.log(idPrefix)
         document.getElementById(`${idPrefix}-total`).innerText = new String(processes.total);
         document.getElementById(`${idPrefix}-manufatured`).innerText = new String(processes.manufatured);
         document.getElementById(`${idPrefix}-done`).innerText = new String(processes.done);
@@ -326,10 +323,10 @@ function handleProcesses(processes) {
     handle('children', processes.children);
 }
 
-function handleCustomerCreatedModels(customerModelsCount) {
-    document.getElementById('text-models-received').innerText = customerModelsCount['0']
-    document.getElementById('image-models-received').innerText = customerModelsCount['1']
-    document.getElementById('cad-models-received').innerText = customerModelsCount['2']
+function handleCustomerCreatedModels(obj) {
+    document.getElementById('text-models-received').innerText = obj['0']
+    document.getElementById('image-models-received').innerText = obj['1']
+    document.getElementById('cad-models-received').innerText = obj['2']
     document.getElementById('total-models-received').innerText = obj['0'] + obj['1'] + obj['2']
 }
 
@@ -376,7 +373,6 @@ document.getElementById('ProductionRobot').addEventListener('change', (event) =>
     const typeCountElement = document.getElementById('ProductionRobotTypeCount')
     typeCountElement.setAttribute('max', newValue)
     typeCountElement.value = Math.min(newValue, typeCountElement.value)
-    console.log(event)
 })
 
 function createRandomIntervalInput({name, defaultStart, defaultEnd}) {
@@ -553,9 +549,41 @@ const inputParams = [
             unit: 'hours'
         },
         isTime: true
+    }, {
+        name:'providerSupplyQueryTimeout',
+        defaultStart: {
+            value: 10,
+            unit: 'seconds'
+        },
+        defaultEnd: {
+            value: 15,
+            unit: 'seconds'
+        },
+        isTime: true
+    }, {
+        name:'providerSupplyOrderDuration',
+        defaultStart: {
+            value: 10,
+            unit: 'hours'
+        },
+        defaultEnd: {
+            value: 15,
+            unit: 'hours'
+        },
+        isTime: true
+    }, {
+        name:'providerSupplyOrderTimeout',
+        defaultStart: {
+            value: 12,
+            unit: 'hours'
+        },
+        defaultEnd: {
+            value: 20,
+            unit: 'hours'
+        },
+        isTime: true
     }
 ]
-
 inputParams.forEach(({name, isTime, defaultStart, defaultEnd}) => {
     const element = document.querySelector('#'+name) 
     if (isTime) {
@@ -628,8 +656,12 @@ fr.onload = e => {
     setNumber('PlannersCount', state.planner.count)
     setNumber('detailTypeCount', state.detailTypeCount)
     setNumber('resourceTypeCount', state.resourceTypeCount)
+    setNumber('providerSafetyMultiplyer', state.provider.safetyMultiplyer)
+    setStartEndTime('providerSupplyQueryTimeout', state.provider.supplyQueryTimeout)
+    setStartEndTime('providerSupplyOrderDuration', state.provider.supplyOrderDuration)
+    setStartEndTime('providerSupplyOrderTimeout', state.provider.supplyOrderTimeout)
+
 }
 function load(event) {
-    console.log(event)
     fr.readAsText(event.target.files[0])
 }

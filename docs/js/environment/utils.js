@@ -62,6 +62,7 @@ export function handleMessage(message, environment, messageFn) {
             })(),
             detailTypeCount: data.detailTypeCount,
             resourceTypeCount: data.resourceTypeCount,
+            providerArgs: data.provider,
         });
         env.run()
             .then(() => messageFn({ topic: "Done" }));

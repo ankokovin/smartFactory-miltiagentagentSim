@@ -5,9 +5,8 @@ import { isResourceType } from "../data/types/ResourceType.js";
 import Holder, { HolderSupplyQuery, HolderSupplyResponse } from "./Holder.js";
 let idx = 0;
 export default class Provider extends Holder {
-    constructor(getHolders, getProcesses, getResourceTypeById, communicationDelay, position) {
+    constructor(getHolders, getProcesses, getResourceTypeById, communicationDelay, providerArgs, position) {
         super(communicationDelay);
-        this.safety_multiplyer = 1.2;
         this.checkOrders = (time, addNewEvent) => {
             this.currentSupply.clear();
             this.expectingHolderAnswers = true;
@@ -18,12 +17,8 @@ export default class Provider extends Holder {
                 eventHandler: holder.handleProviderQuery
             }));
             addNewEvent({
-                time: time + 10,
+                time: time + getRandomNumber(this.providerArgs.supplyQueryTimeout),
                 eventHandler: this.createNewSupplyOrders
-            });
-            addNewEvent({
-                time: time + 20,
-                eventHandler: this.checkOrders
             });
         };
         this.createNewSupplyOrders = (time, addNewEvent) => {
@@ -32,10 +27,14 @@ export default class Provider extends Holder {
                 .map(([typeId, count]) => this.createNewSupplyOrder(typeId, count));
             this.resourceOrders = [...this.resourceOrders, ...newSupplyOrders];
             newSupplyOrders.forEach(order => addNewEvent({
-                time: time + 5,
+                time: time + getRandomNumber(this.providerArgs.supplyOrderDuration),
                 eventHandler: this.handleSupplyOrderCame,
                 object: order
             }));
+            addNewEvent({
+                time: time + getRandomNumber(this.providerArgs.supplyOrderTimeout),
+                eventHandler: this.checkOrders
+            });
         };
         this.handleSupplyOrderCame = (_time, _addNewEvent, supOrder) => {
             if (!(supOrder instanceof ResourceOrder))
@@ -59,12 +58,13 @@ export default class Provider extends Holder {
         this.getResourceTypeById = getResourceTypeById;
         this.currentSupply = new Map();
         this.expectingHolderAnswers = false;
+        this.providerArgs = providerArgs;
     }
     createNewSupplyOrder(typeId, reqCount) {
         const type = this.getResourceTypeById(typeId);
         if (!type)
             throw Error('unexpected typeId ' + typeId);
-        const quantity = reqCount * this.safety_multiplyer;
+        const quantity = reqCount * this.providerArgs.safetyMultiplyer;
         return new ResourceOrder(`supply order ${++idx}`, type, quantity);
     }
     updatePosition(newPosition) {
