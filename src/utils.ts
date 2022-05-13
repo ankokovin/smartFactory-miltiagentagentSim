@@ -1,3 +1,8 @@
+import LogisticRobotArgs from "./data/environmentSettings/LogisticRobotArgs";
+import ProductionRobotArgs from "./data/environmentSettings/ProductionRobotArgs";
+import StartOrderProportion from "./data/environmentSettings/StartOrderProportion";
+import ProductModelEnum from "./data/ProductModelEnum";
+import RandomInterval from "./data/RandomInterval";
 import Environment from "./Environment";
 
 export function randomNumber(min: number, max: number) : number {
@@ -9,14 +14,15 @@ export function randomInt(min: number, max: number) : number {
 }
 
 export function getRandom<T>(arr: Array<T>, n?: number) : Array<T> {
-    var result = new Array(n),
-        len = arr.length,
-        taken = new Array(len);
+    const result = new Array(n);
+    let len = arr.length;
+    const taken = new Array(len);
+        
     if (n) {
         if (n > len)
         throw new RangeError("getRandom: more elements taken than available");
         while (n--) {
-            var x = Math.floor(Math.random() * len);
+            const x = Math.floor(Math.random() * len);
             result[n] = arr[x in taken ? taken[x] : x];
             taken[x] = --len in taken ? taken[len] : len;
         }
@@ -26,29 +32,53 @@ export function getRandom<T>(arr: Array<T>, n?: number) : Array<T> {
     }   
 }
 
-export function handleMessage(message: string, environment: Environment, messageFn: (o:any) => void) {
+export function handleMessage(message: string, environment: Environment, messageFn: (o:any) => void) : Environment {
     const data = JSON.parse(message);
+    let env = environment
     if (data.isStart) {
         if (environment) {
             environment.stop()
         }
-        environment = new Environment({
+        env = new Environment({
             logFunction: messageFn,
             delay: data.delay,
             iterCount: data.iter,
-            logisticRobotCount: data.logisticRobotCount,
-            productionRobotCount: data.productionRobotCount,
-            orderProbability: data.orderProbability,
-            logisticRobotSpeed: data.logisticRobotSpeed
+            logisticRobotArgs: <LogisticRobotArgs>data.logisticRobots,
+            productionRobotArgs: <ProductionRobotArgs>data.productionRobots,
+            holderCount: data.holderCount,
+            defaultInternalEventDelay: <RandomInterval>data.defaultInternalEventDelay,
+            defaultCommunicationDelay: <RandomInterval>data.defaultCommunicationDelay,
+            customerNewOrderDelay: <RandomInterval>data.customer.newOrderDistribution,
+            processMakerRandomParams: {
+                inputCount: <RandomInterval>data.processMaker.processMakerInputCount,
+                inputQuantity: <RandomInterval>data.processMaker.processMakerInputQuantity,
+                outputQuantity: <RandomInterval>data.processMaker.processMakerOutputQuantity,
+                primitiveProbability: data.processMaker.processMakerPrimitiveProbability
+            },
+            processRandomParam: {
+                responseTimeoutDelay: <RandomInterval>data.process.responseTimeoutDelay,
+                planRetryDelay: <RandomInterval>data.process.planRetryDelay,
+            },
+            startOrderProportion: <StartOrderProportion>data.customer.startOrderProportion,
+            plannerCount: data.planner.count,
+            plannerDurations: (() => {
+                const map = new Map<ProductModelEnum, RandomInterval>()
+                map.set(ProductModelEnum.Text, <RandomInterval>data.planner.duration.text)
+                map.set(ProductModelEnum.Image, <RandomInterval>data.planner.duration.image)
+                map.set(ProductModelEnum.CAD, <RandomInterval>data.planner.duration.CAD)
+                return map
+            })(),
+            detailTypeCount: data.detailTypeCount,
+            resourceTypeCount: data.resourceTypeCount,
         })
-        environment.run()
+        env.run()
             .then(() => messageFn({topic: "Done"}))
     }
     else if (data.isStop) {
-        environment.stop()
+        env.stop()
     }
     else if (data.delay || data.delay === 0) {
-        environment.delayMs = data.delay
+        env.delayMs = data.delay
     }
-    return environment
+    return env
 }

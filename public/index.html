@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart factory</title>
+    <title>Модель умного производства</title>
     <link href="css/index.css" rel="stylesheet">
     <script src="js/index.js" defer></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">    
@@ -12,53 +12,23 @@
 </head>
 <body>
     <div class="text-center">
-        <div class="container">
             <div class="row">
-                <h1>Smart factory</h1>
+                <h1>Модель умного производства</h1>
             </div>
             <div class="row">
                 <div class="col">
-                    <button id="start" class="btn btn-primary" onclick="start()">Start</button>
-                </div>
-                <div class="col">
-                    <button id="stop" class="btn btn-danger" disabled onclick="stop()">Stop</button>
-
-                </div>
-                <div class="col">
-                    <p>Current turn: <span id="turn"></span></p>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col">
-                    <input type="range" id="delay" name="delay" min="1" max="1000" value="100" />
-                    <label for="delay">Delay <span id="delay-value">100</span></label>
-                    <input type="checkbox" name="noDelay" id="noDelay" class="form-check-input" >
-                </div>
-                
-                <div class="col">
-                    <input type="number" name="ProductionRobot" id="ProductionRobot" value="3" min="1" max="100">
-                    <label for="ProductionRobot">ProductionRobot count</label>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col">
-                    <input type="number" name="iter" id="iter" value="200">
-                    <label for="iter">Iteration count</label>
-                </div>
-
-                <div class="col">
-                    <input type="number" name="LogisticRobot" id="LogisticRobot" value="3" min="1" max="100">
-                    <label for="LogisticRobot">LogisticRobot count</label>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col">
-                    <input type="range" name="orderProbability" id="orderProbability" value = "0.05" min="0.001", max="0.5", step="0.001">
-                    <label for="orderProbability">Order probability <span id="orderProbability-value">0.05</span></label>
-                </div>
-                <div class="col">
-                    <input type="number" name="LogisticRobotSpeed" id="LogisticRobotSpeed" value="100">
-                    <label for="LogisticRobotSpeed">LogisticRobot speed</label>
+                    <input type="file" id="files" name="files" accept=".json"/>
+                    <button id="save" type="button" class="btn btn-success" onclick="save()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-save" viewBox="0 0 16 16">
+                        <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v7.293l2.646-2.647a.5.5 0 0 1 .708.708l-3.5 3.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L7.5 9.293V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1H2z"/>
+                      </svg></button>
+                    <button id="start" class="btn btn-primary" onclick="start()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-play" viewBox="0 0 16 16">
+                        <path d="M10.804 8 5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"/>
+                      </svg></button>
+                    <button id="stop" class="btn btn-danger" disabled onclick="stop()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-stop" viewBox="0 0 16 16">
+                        <path d="M3.5 5A1.5 1.5 0 0 1 5 3.5h6A1.5 1.5 0 0 1 12.5 5v6a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 11V5zM5 4.5a.5.5 0 0 0-.5.5v6a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 .5-.5V5a.5.5 0 0 0-.5-.5H5z"/>
+                      </svg></button>
+                    <span style="margin-left: 5em;">Количество пройденых эвентов: <span id="turn">0</span></span>
+                    <span style="margin-left: 5em;">Пройденное время: <span id="time">0</span></span>
                 </div>
             </div>
             <div class="row">
@@ -75,7 +45,7 @@
                                     type="button" 
                                     role="tab" 
                                     aria-controls="orders" 
-                                    aria-selected="true">Orders</button>
+                                    aria-selected="true">Заказы</button>
                         </li>
                         <li class="nav-item">
                             <button   class="nav-link" 
@@ -85,63 +55,278 @@
                             type="button" 
                             role="tab" 
                             aria-controls="processes" 
-                            aria-selected="true">Processes</button>
+                            aria-selected="true">Процессы</button>
+                        </li>
+                        <li class="nav-item">
+                            <button   class="nav-link" 
+                            id="legend-tab" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#legend" 
+                            type="button" 
+                            role="tab" 
+                            aria-controls="legend" 
+                            aria-selected="true">Легенда</button>
+                        </li>
+                        <li class="nav-item">
+                            <button   class="nav-link" 
+                            id="planner-tab" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#planner" 
+                            type="button" 
+                            role="tab" 
+                            aria-controls="planner" 
+                            aria-selected="true">Планировщик</button>
                         </li>
                       </ul>
-                    <div class="tab-content">
-                        <div class="tab-pane fade show active" id="orders" role="tabpanel" aria-labelledby="order-tab">
-                            <p>Total: <span id="orders-total"></span></p>
-                            <p>Done: <span id="orders-done"></span></p>
+                    <div class="tab-content show active">
+                        <div class="tab-pane fade" id="orders" role="tabpanel" aria-labelledby="order-tab">
+                            <p>Всего: <span id="orders-total"></span></p>
+                            <p>Окончено: <span id="orders-done"></span></p>
                         </div>
                         <div class="tab-pane fade" id="processes" role="tabpanel" aria-labelledby="processes-tab">
                             <div>
-                                <h2>All</h2>
-                                <p>Total: <span id="processes-total"></span></p>
-                                <p>Started: <span id="processes-started"></span></p>
-                                <p>Manufatured: <span id="processes-manufatured"></span></p>
-                                <p>Done: <span id="processes-done"></span></p>
+                                <h2>Все</h2>
+                                <p>Создано: <span id="processes-total"></span></p>
+                                <p>Начато: <span id="processes-started"></span></p>
+                                <p>Произведено: <span id="processes-manufatured"></span></p>
+                                <p>Окончено: <span id="processes-done"></span></p>
                             </div>
                             <div>
-                                <h2>primitive</h2>
-                                <p>Total: <span id="processes-primitive-total"></span></p>
-                                <p>Started: <span id="processes-primitive-started"></span></p>
-                                <p>Manufatured: <span id="processes-primitive-manufatured"></span></p>
-                                <p>Done: <span id="processes-primitive-done"></span></p>
+                                <h2>Родительские</h2>
+                                <p>Создано: <span id="processes-parents-total"></span></p>
+                                <p>Начато: <span id="processes-parents-started"></span></p>
+                                <p>Произведено: <span id="processes-parents-manufatured"></span></p>
+                                <p>Окончено: <span id="processes-parents-done"></span></p>
                             </div>
                             <div>
-                                <h2>simple</h2>
-                                <p>Total: <span id="processes-simple-total"></span></p>
-                                <p>Started: <span id="processes-simple-started"></span></p>
-                                <p>Manufatured: <span id="processes-simple-manufatured"></span></p>
-                                <p>Done: <span id="processes-simple-done"></span></p>
+                                <h2>Дочерние</h2>
+                                <p>Создано: <span id="processes-children-total"></span></p>
+                                <p>Начато: <span id="processes-children-started"></span></p>
+                                <p>Произведено: <span id="processes-children-manufatured"></span></p>
+                                <p>Окончено: <span id="processes-children-done"></span></p>
                             </div>
-                            <div>
-                                <h2>parents</h2>
-                                <p>Total: <span id="processes-parents-total"></span></p>
-                                <p>Started: <span id="processes-parents-started"></span></p>
-                                <p>Manufatured: <span id="processes-parents-manufatured"></span></p>
-                                <p>Done: <span id="processes-parents-done"></span></p>
-                            </div>
-                            <div>
-                                <h2>children</h2>
-                                <p>Total: <span id="processes-children-total"></span></p>
-                                <p>Started: <span id="processes-children-started"></span></p>
-                                <p>Manufatured: <span id="processes-children-manufatured"></span></p>
-                                <p>Done: <span id="processes-children-done"></span></p>
+                        </div>
+                        <div class="tab-pane fade" id="legend" role="tabpanel" aria-labelledby="legend-tab">
+                            <h4>Легенда</h4>
+                            <ul class="list-group" id="legend-list">
+
+                            </ul>
+                        </div>
+                        <div class="tab-pane fade" id="planner" role="tabpanel" aria-labelledby="planner-tab">
+                            <h4>Планировщик</h4>
+                            <div class="flex">
+                                <div>
+                                    <h5>Текст</h5>
+                                    <p>Получено от заказчика: <span id="text-models-received">0</span></p>
+                                    <p>В очереди: <span id="text-models-in-queue">0</span></p>
+                                    <p>В работе: <span id="text-models-in-progress">0</span></p>
+                                    <p>Обработано: <span id="text-models-done">0</span></p>
+                                </div>
+                                <div>
+                                    <h5>Изображение</h5>
+                                    <p>Получено от заказчика: <span id="image-models-received">0</span></p>
+                                    <p>В очереди: <span id="image-models-in-queue">0</span></p>
+                                    <p>В работе: <span id="image-models-in-progress">0</span></p>
+                                    <p>Обработано: <span id="image-models-done">0</span></p>
+                                </div>
+                                <div>
+                                    <h5>CAD</h5>
+                                    <p>Получено от заказчика: <span id="cad-models-received">0</span></p>
+                                    <p>В очереди: <span id="cad-models-in-queue">0</span></p>
+                                    <p>В работе: <span id="cad-models-in-progress">0</span></p>
+                                    <p>Обработано: <span id="cad-models-done">0</span></p>
+                                </div>
+                                <div>
+                                    <h5>Всего</h5>
+                                    <p>Получено от заказчика: <span id="total-models-received">0</span></p>
+                                    <p>В очереди: <span id="total-models-in-queue">0</span></p>
+                                    <p>В работе: <span id="total-models-in-progress">0</span></p>
+                                    <p>Обработано: <span id="total-models-done">0</span></p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col"> 
-                    <h4>Legend</h4>
-                    <ul class="list-group" id="legend">
-
-                    </ul>
+                    <div class="settings-tab" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+                        <h2>Настройки</h2>
+                        <details open>
+                            <summary>Общие</summary>
+                            <div class="flex">
+                                <div>
+                                    <input type="number" name="iter" id="iter" value="500000">
+                                    <label for="iter">Максимальное количество эвентов</label>
+                                </div>
+                                <div>
+                                    <input type="range" id="delay" name="delay" min="1" max="1000" value="100" />
+                                    <label for="delay">Скорость <span id="delay-value">100</span></label>
+                                    <input type="checkbox" name="noDelay" id="noDelay" class="form-check-input" >
+                                </div>
+                            </div>
+                            <fieldset id="defaultInternalEventDelay">
+                                <legend>Распределение интервалов внутренних событий</legend>
+                            </fieldset>
+                            <fieldset id="defaultCommunicationDelay">
+                                <legend>Распределение интервалов сообщений между агентами</legend>
+                            </fieldset>
+                        </details>
+                        <details>
+                            <summary>Заказчик</summary>
+                            <fieldset id="newOrder">
+                                <legend>Распределение интервалов между заказами</legend>
+                            </fieldset>
+                            <fieldset>
+                                <legend>Соотношение типов заказов</legend>
+                                <div class="flex">
+                                    <div>
+                                        <label for="orderTypeWeightText">Текст</label>
+                                        <input type="number" id="orderTypeWeightText" name="orderTypeWeightText" min="1" step="1" value="1">
+                                    </div>
+                                    <div class="sep">
+                                        :
+                                    </div>
+                                    <div>
+                                        <label for="orderTypeWeightImage">Изображение</label>
+                                        <input type="number" id="orderTypeWeightImage" name="orderTypeWeightImage" min="1" step="1" value="1">
+                                    </div>
+                                    <div class="sep">
+                                        :
+                                    </div>
+                                    <div>
+                                        <label for="orderTypeWeightCAD">CAD</label>
+                                        <input type="number" id="orderTypeWeightCAD" name="orderTypeWeightCAD" min="1" step="1" value="1">
+                                    </div>
+                                    <div class="sep">
+                                        :
+                                    </div>
+                                    <div>
+                                        <label for="orderTypeWeightProcess">Уже готовый процесс</label>
+                                        <input type="number" id="orderTypeWeightProcess" name="orderTypeWeightProcess" min="1" step="1" value="1">
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </details>
+                        <details>
+                            <summary>Планировщик</summary>
+                            <div>
+                                <input type="number" name="PlannersCount" id="PlannersCount" value="3" min="1" max="100">
+                                <label for="PlannersCount">Количество планировщиков</label>
+                            </div>
+                            <fieldset id="textModelDuration">
+                                <legend>Длительность обработки текстового описания</legend>
+                            </fieldset>
+                            <fieldset id="imageModelDuration">
+                                <legend>Длительность обработки изображения</legend>
+                            </fieldset>
+                            <fieldset id="CADModelDuration">
+                                <legend>Длительность обработки CAD модели</legend>
+                            </fieldset>
+                        </details>
+                        <details>
+                            <summary>Логистические агенты</summary>
+                            <div class="flex">
+                                <div>
+                                    <input type="number" name="LogisticRobot" id="LogisticRobot" value="3" min="1" max="100">
+                                    <label for="LogisticRobot">Количество логистических агентов</label>
+                                </div>
+                                <div>
+                                    <input type="number" name="LogisticRobotSpeed" id="LogisticRobotSpeed" value="100" min="1" max="2000">
+                                    <label for="LogisticRobotSpeed">Скорость логистических агентов</label>
+                                </div>
+                            </div>
+                        </details>
+                        <details>
+                            <summary>Агенты хранения</summary>
+                            <div>
+                                <input type="number" name="HolderCount" id="HolderCount" value="5" min="1" max="100">
+                                <label for="HolderCount">Количество агентов хранения</label>
+                            </div>
+                        </details>
+                        <details>
+                            <summary>Агенты производители</summary>
+                            <div class="flex">
+                                <div>
+                                    <input type="number" name="ProductionRobot" id="ProductionRobot" value="3" min="1" max="100">
+                                    <label for="ProductionRobot">Количество агентов производителей</label>
+                                </div>
+                                <div>
+                                    <input type="number" name="ProductionRobotTypeCount" id="ProductionRobotTypeCount" value="3" min="1" max="100">
+                                    <label for="ProductionRobotTypeCount">Количество типов производителей</label>
+                                </div>
+                            </div>
+                            <fieldset id="productionRobotDuration">
+                                <legend>Длительность производства</legend>
+                            </fieldset>
+                        </details>
+                        <details>
+                            <summary>Процессы</summary>
+                            <div class="flex">
+                                <div>
+                                    <label for="resourceTypeCount">Количество типов ресурсов</label>
+                                    <input id="resourceTypeCount" name="resourceTypeCount" type="number" min="1" value="5">
+                                </div>
+                                <div>
+                                    <label for="detailTypeCount">Количество типов деталей</label>
+                                    <input id="detailTypeCount" name="detailTypeCount" type="number" min="1" value="5">
+                                </div>
+                                <div>
+                                    <label for="processMakerPrimitiveProbability">Вероятность простого процесса</label>
+                                    <input id="processMakerPrimitiveProbability" name="processMakerPrimitiveProbability" type="number" min="0" max="1" step="0.01" value="0.5"/>
+                                </div>
+                            </div>
+                            <fieldset id="processResponseTimeoutDelay">
+                                <legend>Длительность ожидания процессом ответа от акторов</legend>
+                            </fieldset>
+                            <fieldset id="processPlanRetryDelay">
+                                <legend>Длительность ожидания процессом перед повторной попыткой планирования</legend>
+                            </fieldset>
+                            <fieldset id="processMakerInputCount">
+                                <legend>Количество входных материалов</legend>
+                            </fieldset>
+                            <fieldset id="processMakerInputQuantity">
+                                <legend>Количество необходимых материалов</legend>
+                            </fieldset>
+                            <fieldset id="processMakerOutputQuantity">
+                                <legend>Количество результирующих материалов</legend>
+                            </fieldset>
+                        </details>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+        <template id="randomIntIntervalTemplate">
+            <div class="flex">
+                <div class="randomIntIntervalTemplateStart">
+                    <label>Минимум</label>
+                    <input type="number" min="1"/>
+                </div>
+                <div class="randomIntIntervalTemplateEnd">
+                    <label>Максимум</label>
+                    <input type="number" min="1"/>
+                </div>
+            </div>
+        </template>
+        <template id="randomIntervalTemplate">
+            <div class="flex">
+                <div class="randomIntervalTemplateStart">
+                    <label>Минимум</label>
+                    <input type="number" min="0" step="0.00001">
+                    <select>
+                        <option value="seconds">сек</option>
+                        <option value="minutes">мин</option>
+                        <option value="hours">ч</option>
+                        <option value="days">дней</option>
+                    </select>
+                </div>
+                <div class="randomIntervalTemplateEnd">
+                    <label>Максимум</label>
+                    <input type="number" min="0" step="0.00001" value="0.002">
+                    <select>
+                        <option selected value="seconds">сек</option>
+                        <option value="minutes">мин</option>
+                        <option value="hours">ч</option>
+                        <option value="days">дней</option>
+                    </select>
+                </div>
+            </div>
+        </template>
 </body>
 </html>

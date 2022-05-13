@@ -1,157 +1,117 @@
 import IAgent from "../interfaces/IAgent";
-import Order from "../data/Order";
-import ProductType, { isProductType } from "../data/types/ProductType";
-import ProcessType from "../data/types/ProcessType";
-import ResourceType, { isResourceType } from "../data/types/ResourceType";
-import { randomNumber, randomInt, getRandom } from "../utils";
-import ProcessData from "../data/process/ProcessData";
-import Capability from "../data/process/Capability";
-import ProductionRobotType from "../data/types/ProductionRobotType";
-import DetailType, { isDetailType } from "../data/types/DetailType";
+import { isOrder } from "../data/Order";
+import { AddNewEvent, AgentEventArgument, EventHandler, Time } from "../data/AgentEvent";
+import ProductModelEnum from "../data/ProductModelEnum";
+import OrderPlanningQueue from "./OrderPlanningQueue";
+import { ProcessMaker } from "./ProcessMaker";
+import RandomInterval, { getRandomNumber } from "../data/RandomInterval";
 
-let idx = 0;
+export let designsInWorks = new Map<ProductModelEnum,number>()
+export let designsDone = new Map<ProductModelEnum, number>() 
+export function resetDesignsCounts() {
+    designsInWorks.set(ProductModelEnum.Text, 0)
+    designsInWorks.set(ProductModelEnum.Image, 0)
+    designsInWorks.set(ProductModelEnum.CAD, 0)
+    designsDone.set(ProductModelEnum.Text, 0)
+    designsDone.set(ProductModelEnum.Image, 0)
+    designsDone.set(ProductModelEnum.CAD, 0)
+}
 
-export type getNewOrders = () => Order[]
 
-export type getResourceTypes = () => ResourceType[] 
 
-export type createProcessType = (a: ProcessType) => void
-export type getProcessTypes = () => ProcessType[]
-
-export type createProcess = (a: ProcessData) => void
-
-export type createCapability = (a: Capability) => void
-
-export type getProductionRobotTypes = () => ProductionRobotType[]
+export type getOrderQueue = () => OrderPlanningQueue
+export type getProcessMaker = () => ProcessMaker
+let idx = 0
 
 export default class Designer implements IAgent {
 
-    types: Map<string, ProductType>
-
-    
     constructor(
-        getNewOrders: getNewOrders, 
-        getResourceTypes: getResourceTypes, 
-        createProcessType: createProcessType,
-        getProcessTypes: getProcessTypes,
-        createProcess:createProcess,
-        createCapability: createCapability,
-        getProductionRobotTypes: getProductionRobotTypes ) {
-        this.id = `Designer-${idx}`
-        this.getNewOrders = getNewOrders
-        this.types = new Map()
-        this.getResourceTypes = getResourceTypes
-        this.createProcessType = createProcessType
-        this.getProcessTypes = getProcessTypes
-        this.createProcess = createProcess
-        this.createCapability = createCapability
-        this.getProductionRobotTypes = getProductionRobotTypes
+            getOrderQueue: getOrderQueue, 
+            getProcessMaker: getProcessMaker, 
+            communicationDelay: RandomInterval, 
+            plannerDurations: Map<ProductModelEnum, RandomInterval>) {
+        this.id = `Designer-${++idx}`
+        this.getOrderQueue = getOrderQueue
+        this.getProcessMaker = getProcessMaker
+        this.communicationDelay = communicationDelay
+        this.plannerDurations = plannerDurations
     }
-
+    private communicationDelay: RandomInterval;
+    private plannerDurations: Map<ProductModelEnum, RandomInterval>;
     id: string;
+    
+    private isBusy = false;
+    
+    private getOrderQueue: getOrderQueue
+    private getProcessMaker: getProcessMaker
 
-    getNewOrders: getNewOrders;
-
-    getResourceTypes: getResourceTypes;
-
-    createProcessType: createProcessType
-    getProcessTypes: getProcessTypes
-
-    createProcess:createProcess
-    createCapability: createCapability
-
-    getProductionRobotTypes: getProductionRobotTypes
-
-    getPrimitiveResources() : ResourceType[] {
-        return this.getResourceTypes().filter(type => isResourceType(type))
-    }
-
-    createPrimitiveProcess(detailType: DetailType, description?: String) : ProcessType {
-        let inputTypes = getRandom(this.getPrimitiveResources() ,randomInt(1, 4))
-        return new ProcessType(inputTypes.map(type => {
-            return {
-                quantity: randomNumber(1, 10),
-                type: type
-            }
-        }), {
-            quantity: randomNumber(1, 10),
-            type: detailType
-        })
-    }
-
-    createNewProductType(description: String): [ProductType, ProcessType] {
-        let productType = new ProductType(`ProductType-${++idx}`)
-        let processType : ProcessType
-        if (Math.random() > 0.5) {
-            processType = this.createPrimitiveProcess(productType, description)
-        } else {
-            let inputTypes = getRandom(this.getResourceTypes() ,randomInt(1, 4))
-            processType = new ProcessType(inputTypes.map(type => {
-                return {
-                    quantity: randomNumber(1, 10),
-                    type: type
-                }
-            }), {
-                quantity: randomNumber(1, 10),
-                type: productType
-            })
-            inputTypes
-                .filter(type => isDetailType(type) && !this.getProcessTypes().some(item => item.output.type == type))
-                .map(type => isDetailType(type) && this.createPrimitiveProcess(type))
-                .forEach(processType =>  {
-                    if (processType) {
-                        this.createCapabilities(processType)
-                        this.createProcessType(processType)
-                    } 
-                })
+    handleOrder: EventHandler  = (currentTime: Time, addNewEventHandler: AddNewEvent, order?: AgentEventArgument) => {
+        if (!isOrder(order)) {
+            return
         }
-        this.createProcessType(processType)
-        this.createCapabilities(processType)
-        return [productType, processType]
-    }
-
-    createCapabilities(processType: ProcessType) {
-        getRandom(this.getProductionRobotTypes())
-        .map(type => {
-            return {
-                productionRobotType: type,
-                processType
-            }})
-        .forEach(capability => this.createCapability(capability))
-    }
-
-    run() {
-        const orders = this.getNewOrders()
-        orders.forEach(order => {
-            let productType : ProductType | undefined
-            let processType : ProcessType | undefined
-            if (order.productId) {
-                if (this.types.has(order.productId)) {
-                    productType = this.types.get(order.productId)
-                } else {
-                    if (!order.description) {
-                        return;
-                    }
-                    [productType, processType] = this.createNewProductType(order.description)
-                }
-            } else {
-                if (order.description) {
-                    [productType, processType] = this.createNewProductType(order.description)
-                } else {
-                    throw new Error("got an order without neither productid nor description")
-                }
+        const delay = this.plannerDurations.get(order.currentProductModel.type)
+        const timeToAdd = delay ? getRandomNumber(delay) : 1
+        designsInWorks.set(order.currentProductModel.type, (designsInWorks.get(order.currentProductModel.type) ?? 0) + 1)
+        const nextHandler = (newProductModelEnum: ProductModelEnum) => {
+            const handler : EventHandler = (currentTime, addNewEventHandler, order) => {
+                if (!isOrder(order)) return
+                designsInWorks.set(order.currentProductModel.type, (designsInWorks.get(order.currentProductModel.type) ?? 1) - 1)
+                designsDone.set(order.currentProductModel.type, (designsDone.get(order.currentProductModel.type) ?? 0) + 1)
+                order.currentProductModel.type = newProductModelEnum
+                return this.handleOrder(currentTime, addNewEventHandler, order)
             }
-            order.setProductType(productType)
-            if (productType) {
-                if (!processType) {
-                    processType = this.getProcessTypes().find(type => type.output.type == productType)
-                    if (!processType) {
-                        throw new Error("failed to get process")
-                    }
-                }
-                this.createProcess({quantity: order.quantity, type: processType, source: order});
-            }    
-        })
+            return handler
+        }
+        if (order.currentProductModel.type === ProductModelEnum.Text) {
+            this.isBusy = true
+            addNewEventHandler({
+                time: currentTime + timeToAdd,
+                object: order,
+                eventHandler: nextHandler(ProductModelEnum.Image),
+            })
+        }
+        if (order.currentProductModel.type === ProductModelEnum.Image) {
+            this.isBusy = true
+            addNewEventHandler({
+                time: currentTime + timeToAdd,
+                object: order,
+                eventHandler: nextHandler(ProductModelEnum.CAD)
+            })
+        }
+        if (order.currentProductModel.type === ProductModelEnum.CAD) {
+            this.isBusy = true
+            addNewEventHandler({
+                time: currentTime + timeToAdd,
+                object: order,
+                eventHandler: nextHandler(ProductModelEnum.Process)
+            })
+        }
+        if (order.currentProductModel.type === ProductModelEnum.Process) {
+            addNewEventHandler({
+                time: currentTime + getRandomNumber(this.communicationDelay),
+                object: order,
+                eventHandler: this.getProcessMaker().handleNewProcess
+            })
+            this.isBusy = false
+        }
     }
     
+    handleCheckBusy: EventHandler = (currentTime, addNewEventHandler) => {
+        addNewEventHandler({
+            time: currentTime + getRandomNumber(this.communicationDelay),
+            eventHandler: this.getOrderQueue().handleDesignerCheckAnswer,
+            object: new DesignerBusinessReply(!this.isBusy, this.id)
+        })
+    }
+}
+
+export class DesignerBusinessReply extends AgentEventArgument {
+    isReady: boolean
+    id: string
+
+    constructor(reply: boolean, id: string) {
+        super()
+        this.isReady = reply;
+        this.id = id;
+    }
 }

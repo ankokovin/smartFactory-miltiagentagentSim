@@ -8,3 +8,31 @@ canvas {
 .tab-content {
     max-height: 1000px;
 }
+
+#settings {
+    display: flex;
+    flex-direction: column;
+}
+
+#settings>div  {
+    display: flex;
+    flex-direction: row;
+}
+
+.flex {
+    display: flex;
+    flex-direction: row;
+}
+
+.flex > div {
+    margin: 1em;
+}
+
+
+#settings > div > div{
+    margin: 1em;
+}
+
+.sep {
+    font-size: xx-large;
+}

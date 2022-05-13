@@ -53,6 +53,6 @@ app.get('/css/:file', function(req, res) {
 //start our server
 server.listen(process.env.PORT || port, () => {
     console.log(server.address());
-    let address : any = server.address()
+    const address : any = server.address()
     open(`http://localhost:${address.port}`)
 });

@@ -1,24 +1,33 @@
+import { Time } from "./AgentEvent";
+import ProductModel from "./ProductModel";
 import ProductType from "./types/ProductType";
 
 export default class Order {
-    type: string = 'order'
+    type = 'order'
+    currentProductModel: ProductModel
     productId?: string
-    description?: string
     productType?: ProductType = undefined 
     quantity: number
-    isDone: boolean = false
+    isDone = false
+    timeCreated: Time
 
     constructor(
         quantity: number,
-        productId?: string,
-        description?: string) {
+        currentProductModel: ProductModel,
+        timeCreated: Time,
+        productId?: string) {
             this.productId = productId;
-            this.description = description;
             this.quantity = quantity;
-    }
+            this.currentProductModel = currentProductModel;
+            this.timeCreated = timeCreated;
+        }
 
     setProductType(productType?: ProductType) {
         this.productType = productType;
+    }
+
+    done() {
+        this.isDone = true
     }
 }
 

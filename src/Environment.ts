@@ -1,5 +1,7 @@
+import PriorityQueue from 'typescript-collections/dist/lib/PriorityQueue';
+
 import Customer from "./agents/Customer";
-import Designer from "./agents/Designer";
+import Designer, { designsDone, designsInWorks, resetDesignsCounts } from "./agents/Designer";
 import IAgent from "./interfaces/IAgent";
 import LogisticRobot from "./agents/LogisticRobot";
 import Order, { isOrder } from "./data/Order";
@@ -8,19 +10,29 @@ import ResourceType from "./data/types/ResourceType";
 import DetailType, { isDetailType } from "./data/types/DetailType";
 import ProcessType from "./data/types/ProcessType";
 import Provider from "./agents/Provider";
-import Resource from "./data/material/Resource";
 import Message from "./Message";
 import ProductionRobotType from "./data/types/ProductionRobotType";
-import ProductionRobot, { isProductionRobot } from "./agents/ProductionRobot";
+import ProductionRobot from "./agents/ProductionRobot";
 import { randomInt } from "./utils";
 import Holder, { isHolder } from "./agents/Holder";
 import Process, { CreateNewProcesses, isProcess } from "./agents/Process";
 import Capability from "./data/process/Capability";
-import EnvironmentSettings from "./EnvironmentSettings";
+import EnvironmentSettings from "./data/environmentSettings/EnvironmentSettings";
+import AgentEvent, { Time } from './data/AgentEvent';
+import OrderPlanningQueue, { orderQueue } from './agents/OrderPlanningQueue';
+import { ProcessMaker } from './agents/ProcessMaker';
+import RandomInterval, { getRandomNumber } from './data/RandomInterval';
+import { ProductModelCreationMap, ProductModelCreationMapReset } from './data/ProductModel';
+import ProductModelEnum from './data/ProductModelEnum';
+import ProductionRobotArgs from './data/environmentSettings/ProductionRobotArgs';
+import StartOrderProportion from './data/environmentSettings/StartOrderProportion';
+import LogisticRobotArgs from './data/environmentSettings/LogisticRobotArgs';
+
+export type AddOrderToEnv = (a: Order, t: Time) => void;
 
 export default class Environment {
 
-    log: (topic: string, content :any) => void;
+    log: (topic: string, content : string | object | number) => void;
     iter: number;
 
     agents: IAgent[];
@@ -40,100 +52,146 @@ export default class Environment {
     provider: Provider[] = [];
     capabilities: Capability[] = [];
     holders: Holder[] = [];
-    Designer: Designer;
+    designers: Designer[] = [];
+    OrderPlanningQueue: OrderPlanningQueue;
+    ProcessMaker: ProcessMaker;
+    addNewEventHandler: undefined | ((e: AgentEvent) => void);
 
     getCleanHolders = () => this.holders.filter(item => isHolder(item))
+    halt = false;
 
     constructor(setting : EnvironmentSettings) {
         this.log = (topic: string, content :any) => setting.logFunction(<Message> {topic, content});
         this.iter = setting.iterCount
         this.log('debug','Creating environment')
-        this.loadTypes()
+        this.loadTypes(setting.detailTypeCount, setting.resourceTypeCount)
 
+        ProductModelCreationMapReset()
+        resetDesignsCounts()
 
         const getHolders = () => this.holders
-        const getLogisiticRobots = () => this.logisticRobots.filter(robot => !robot.target)
+        const getLogisiticRobots = () => this.logisticRobots
         const getCustomer = () => this.customer[0]
-        
 
-        const createProcess : CreateNewProcesses = (input, parentProcess) => {
+
+        this.ProcessMaker = new ProcessMaker(
+            () => this.resourceTypes,
+            (processType) => this.processTypes.push(processType),
+            () => this.processTypes,
+            (ProcessData, time) => {
+                const process = new Process(
+                    ProcessData.quantity, 
+                    ProcessData.type, 
+                    ProcessData.source,
+                    () => this.productionRobots,
+                    getHolders,
+                    getLogisiticRobots,
+                    getCustomer,
+                    createProcess,
+                    setting.defaultCommunicationDelay,
+                    setting.defaultInternalEventDelay,
+                    setting.processRandomParam
+                    ) 
+                this.processes.push(process)
+                this.agents.push(process)
+                if (this.addNewEventHandler) {
+                    this.addNewEventHandler({
+                        time: time + getRandomNumber(setting.defaultInternalEventDelay),
+                        eventHandler: process.start 
+                    })
+                }
+                return process
+            }, 
+            (capability) => this.capabilities.push(capability),
+            () => this.productionRobotTypes,
+            setting.processMakerRandomParams
+        )
+
+        const createProcess : CreateNewProcesses = (input, parentProcess, time) => {
             if (!isDetailType(input.type)) {
                 throw new Error()
             } 
             let processType = this.processTypes.find(type => type.output.type.id === input.type.id)
             if (!processType) {
-                processType = this.Designer.createPrimitiveProcess(input.type)
+                processType = this.ProcessMaker.createPrimitiveProcess(input.type)
             }
-            let newProcess = new Process(
+            const newProcess = new Process(
                 input.quantity, 
                 processType, 
                 parentProcess, 
-                (process) => this.productionRobots
-                    .filter(robot => !robot.isBusy 
-                        && robot.getCapabilities().some(cap => cap.processType == process.type)),
+                () => this.productionRobots,
                 getHolders, 
                 getLogisiticRobots,
                 getCustomer,
-                createProcess, 
-                this.getCleanHolders)
+                createProcess,
+                setting.defaultCommunicationDelay,
+                setting.defaultInternalEventDelay,
+                setting.processRandomParam)
             this.processes.push(newProcess)
             this.agents.push(newProcess)
+            if (this.addNewEventHandler) {
+                this.addNewEventHandler({
+                    time: time + getRandomNumber(setting.defaultInternalEventDelay),
+                    eventHandler: newProcess.start 
+                })
+            }
             return newProcess
         }
 
-        this.Designer = new Designer(
-            () => this.newOrders,
-            () => this.resourceTypes,
-            (processType) => this.processTypes.push(processType),
-            () => this.processTypes,
-            (ProcessData) => {
-                let process = new Process(
-                    ProcessData.quantity, 
-                    ProcessData.type, 
-                    ProcessData.source,
-                    (process) => this.productionRobots
-                        .filter(robot => !robot.isBusy 
-                            && robot.getCapabilities().some(cap => cap.processType == process.type)),
-                    getHolders,
-                    getLogisiticRobots,
-                    getCustomer,
-                    createProcess,
-                    this.getCleanHolders) 
-                this.processes.push(process)
-                this.agents.push(process)
-                return process
-            }, 
-            (capability) => this.capabilities.push(capability),
-            () => this.productionRobotTypes)
+        this.OrderPlanningQueue = new OrderPlanningQueue(
+            () => this.designers,
+            setting.defaultCommunicationDelay
+        )
+        this.designers = new Array(setting.plannerCount).fill({})
+            .map(() => new Designer(
+                () => this.OrderPlanningQueue, 
+                () => this.ProcessMaker,
+                setting.defaultCommunicationDelay, 
+                setting.plannerDurations))
 
             
         this.agents = [
-            ...this.createCustomer(setting.orderProbability),
-            this.Designer,
-            ...this.createProviders(),
-            ...this.createHolders(),
-            ...this.createLogisticRobots(setting.logisticRobotCount, setting.logisticRobotSpeed),
-            ...this.createProductionRobots(setting.productionRobotCount),    
+            ...this.createCustomer(setting.defaultCommunicationDelay, setting.customerNewOrderDelay, setting.startOrderProportion),
+            ...this.designers,
+            ...this.createProviders(setting.defaultCommunicationDelay),
+            ...this.createHolders(setting.holderCount, setting.defaultCommunicationDelay),
+            ...this.createLogisticRobots(
+                    setting.logisticRobotArgs, 
+                    setting.defaultInternalEventDelay, 
+                    setting.defaultCommunicationDelay),
+            ...this.createProductionRobots(setting.productionRobotArgs, setting.defaultCommunicationDelay),    
         ]
         this.delayMs = setting.delay;
     }
 
     async run() {
+
+        const queue = new PriorityQueue<AgentEvent>((a: AgentEvent, b: AgentEvent) => b.time - a.time)
+
+        this.addNewEventHandler = (e: AgentEvent) => {
+            queue.add(e)
+        }
+        queue.add({time: 0, eventHandler: this.customer[0].newOrderEvent})
+        queue.add({time: 0, eventHandler: this.provider[0].checkOrders})
         this.log('resourceTypes', this.resourceTypes);
-        for (let i = 0; i < this.iter; i++) {
-            if (this.delayMs !== 0 || i % 1000 === 0 || i === this.iter - 1) this.log('iteration', {current: i + 1, total: this.iter});
-            let orders: Order[] = []
-            for (const agent of this.agents) {
-                const res = agent.run(i);
-                if (isOrder(res)) {
-                    orders.push(res);
-                }
+
+        const handleNewAgentEvent = (e: AgentEvent | undefined) => {
+            if (e && this.addNewEventHandler) {
+                const result = e.eventHandler(e.time, this.addNewEventHandler, e.object)
+                maxTime = Math.max(maxTime, e.time)
             }
+        }
 
-            this.newOrders = orders;
-            this.orders = [...this.orders, ...this.newOrders];  
+        let maxTime = 0
+        
+        for (let i = 0; i < this.iter && !this.halt; i++) {
+            if (!queue.isEmpty()) {
+                handleNewAgentEvent(queue.dequeue())
+            } 
 
-            if (this.delayMs !== 0 || i % 1000 === 0 || i === this.iter - 1) {
+            if (this.delayMs !== 0 || i % 100 === 0 || i === this.iter - 1) {
+                this.log('iteration', {current: i + 1, total: this.iter});
+                this.log('time', maxTime)
                 this.log('orders',  {
                     total: this.orders.length,
                     done: this.orders.filter(order => order.isDone).length
@@ -141,7 +199,7 @@ export default class Environment {
                 const reportProcesses = (processes: Process[]) => {
                     return {
                         total: processes.length,
-                        started: processes.filter(process => process.selectedProductionRobot).length,
+                        started: processes.filter(process => process.currentPlan).length,
                         manufatured: processes.filter(process => process.result).length,
                         done: processes.filter(process => process.isCompleted).length,
                     }
@@ -158,76 +216,106 @@ export default class Environment {
                 this.log('holders', this.getCleanHolders());
                 this.log('provider', this.provider);
                 this.log('customer', this.customer);
+                this.log('customerCreatedModels', ProductModelCreationMap);
+                this.log('designsInWorks', [...designsInWorks.entries()].map(([type, val]) => [type.toString(), val]));
+                this.log('designsInQueue', (() => {
+                    const res : any = {}
+                    res[ProductModelEnum.Text.toString()] =  0
+                    res[ProductModelEnum.Image.toString()] =  0
+                    res[ProductModelEnum.CAD.toString()] =  0
+                    res[ProductModelEnum.Process.toString()] =  0
+
+                    orderQueue.forEach(order => {
+                        res[order.currentProductModel.type.toString()] = res[order.currentProductModel.type.toString()] + 1
+                    })
+                    return res})())
+                this.log('designsDone', [...designsDone.entries()].map(([type, val]) => [type.toString(), val]))
             }
             if (this.delayMs) {
                 await new Promise(resolve => setTimeout(resolve, this.delayMs));
-            }     
+            }  
         }
     }
 
-    loadTypes(){
-        const resourceTypes : ResourceType[] = new Array(5).fill({}).map((_, index) => {return {id:`ResourceType-${index}`}})
-        const detailTypes : DetailType[] = new Array(5).fill({}).map((_, index) => new DetailType(`DetailType-${index}`))
+    loadTypes(detailTypeCount:number, resourceTypeCount:number){
+        const resourceTypes : ResourceType[] = new Array(detailTypeCount).fill({}).map((_, index) => {return {id:`ResourceType-${index}`}})
+        const detailTypes : DetailType[] = new Array(resourceTypeCount).fill({}).map((_, index) => new DetailType(`DetailType-${index}`))
         this.resourceTypes = [
             ...resourceTypes, 
             ...detailTypes
             ]
     }
 
-    createProductionRobots(count: number) : ProductionRobot[] {
-        this.productionRobotTypes = new Array(Math.min(count, randomInt(2, count - 1)))
+    createProductionRobots(args: ProductionRobotArgs, defaultCommunicationDelay: RandomInterval) : ProductionRobot[] {
+        this.productionRobotTypes = new Array(args.typeCount)
             .fill({})
             .map((_, index) => new ProductionRobotType(index.toString()))
         
-
-
         this.productionRobots = []
         let done = 0
         const getCapabilities = (p: ProductionRobot) => this.capabilities.filter(item => item.productionRobotType.id === p.type.id)
         for (let index = 0; index < this.productionRobotTypes.length; index++) {
             const type = this.productionRobotTypes[index];
             const thisCount = (index === this.productionRobotTypes.length - 1) 
-                                ? count - done
-                                : randomInt(1, count - done - (this.productionRobotTypes.length - index - 1))
+                                ? args.count - done
+                                : randomInt(1, args.count - done - (this.productionRobotTypes.length - index - 1))
             this.productionRobots = [
                 ...this.productionRobots, 
                 ...new Array(thisCount)
                     .fill({})
-                    .map(_ => new ProductionRobot(type, getCapabilities))]
+                    .map(_ => new ProductionRobot(type, getCapabilities, defaultCommunicationDelay, args.duration))]
             done += thisCount
         }
-        this.holders = [...this.holders, ...this.productionRobots]
+        this.holders = [...this.holders]
         return this.productionRobots
     }
 
-    createLogisticRobots(count: number, speed: number) : LogisticRobot[] {
-        this.logisticRobots = new Array(count).fill({}).map(() => new LogisticRobot(speed))  
+    createLogisticRobots(
+            args: LogisticRobotArgs,
+            internalEventDelay: RandomInterval,
+            defaultCommunicationDelay: RandomInterval) : LogisticRobot[] {
+        this.logisticRobots = new Array(args.count).fill({})
+            .map(() => new LogisticRobot(args.speed, internalEventDelay, defaultCommunicationDelay))  
         return this.logisticRobots
     }
 
-    createProviders() : Provider[] {
+    createProviders(defaultCommunicationDelay: RandomInterval) : Provider[] {
         const provider = new Provider(
             () => this.holders,
             () => this.processes,
-            (id) => this.resourceTypes.find(type => type.id === id))
+            (id) => this.resourceTypes.find(type => type.id === id),
+            defaultCommunicationDelay)
         this.holders.push(provider)
         this.provider.push(provider)
         return [provider]
     }
 
-    createHolders(count: number = 5) : Holder[] {
-        const holders =  new Array(count).fill({}).map((_) => new Holder())
+    createHolders(count: number, defaultCommunicationDelay: RandomInterval) : Holder[] {
+        const holders =  new Array(count).fill({}).map((_) => new Holder(defaultCommunicationDelay))
         this.holders = [...this.holders, ...holders]
         return holders
     }
 
-    createCustomer(orderProbability: number) : Customer[] {
-        const customer = [new Customer(orderProbability)]
+    createCustomer(defaultCommunicationDelay: RandomInterval, orderIntervalDelay: RandomInterval, startOrderProportion: StartOrderProportion) : Customer[] {
+        const customer = [new Customer(
+                (order: Order, time:Time) => {
+                    this.orders.push(order)
+                    if (!this.addNewEventHandler) return
+                    this.addNewEventHandler({
+                        time,
+                        eventHandler: this.OrderPlanningQueue.handleAddOrder,
+                        object: order
+                    })},
+                defaultCommunicationDelay, 
+                orderIntervalDelay, 
+                startOrderProportion, 
+                () => this.processTypes,
+                )]
         this.customer = customer
         return customer
     }
 
     stop() {
-        this.iter = -1
+        this.halt = true
     }
 }
