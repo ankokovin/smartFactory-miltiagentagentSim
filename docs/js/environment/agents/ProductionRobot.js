@@ -5,8 +5,14 @@ import { getRandomNumber } from "../data/RandomInterval.js";
 import { isDetailType } from "../data/types/DetailType.js";
 import { isProductType } from "../data/types/ProductType.js";
 import { randomInt } from "../utils.js";
-import { ReservedHolder } from "./Holder.js";
+import { ReservedHolder } from "./ReservedHolder.js";
 import { isProcess } from "./Process.js";
+import ProductionRobotReply from "../query/ProductionRobotReply.js";
+import ManifactureResult from "../query/ManifactureResult.js";
+import ProductionRobotReserveResult from "../query/ProductionRobotReserveResult.js";
+import ReservedStatus from "../query/ReservedStatus.js";
+import ReservedStatusQuery from "../query/ReservedStatusQuery.js";
+import StartManufactureQuery from "../query/StartManufactureQuery.js";
 let idx = 0;
 export default class ProductionRobot {
     constructor(type, getCapabilities, communicationDelay, duration, position) {
@@ -100,50 +106,12 @@ export default class ProductionRobot {
         return !this.isBusy && this.getCapabilities().some(c => c.processType === process.type);
     }
 }
-export class ProductionRobotReply {
-    constructor(isReady, id) {
-        this.id = id;
-        this.isReady = isReady;
-    }
-}
-export class ProductionRobotReserveResult extends AgentEventArgument {
-    constructor(id, success) {
-        super();
-        this.id = id;
-        this.success = success;
-    }
-}
-export class StartManufactureQuery extends AgentEventArgument {
-    constructor(process, callback) {
-        super();
-        this.process = process;
-        this.callback = callback;
-    }
-}
 class ManifactureDone extends AgentEventArgument {
     constructor(quantity, type, callback) {
         super();
         this.quantity = quantity;
         this.type = type;
         this.callback = callback;
-    }
-}
-export class ManifactureResult extends AgentEventArgument {
-    constructor(detail) {
-        super();
-        this.detail = detail;
-    }
-}
-export class ReservedStatusQuery extends AgentEventArgument {
-    constructor(callback) {
-        super();
-        this.callback = callback;
-    }
-}
-export class ReservedStatus extends AgentEventArgument {
-    constructor(resources) {
-        super();
-        this.resources = resources;
     }
 }
 export function isProductionRobot(object) {

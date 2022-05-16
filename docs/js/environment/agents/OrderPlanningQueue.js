@@ -1,7 +1,7 @@
 import PriorityQueue from "../lib/typescript-collections/PriorityQueue.js"
 import { isOrder } from "../data/Order.js";
 import { getRandomNumber } from "../data/RandomInterval.js";
-import { DesignerBusinessReply } from "./Designer.js";
+import DesignerBusinessReply from "../query/DesignerBusinessReply.js";
 export let orderQueue;
 let getAllDesigners;
 export default class OrderPlanningQueue {

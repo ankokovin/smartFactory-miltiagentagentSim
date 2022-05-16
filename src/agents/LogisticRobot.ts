@@ -1,13 +1,18 @@
 import IAgent from '../interfaces/IAgent'
 import { randomInt } from '../utils';
-import Holder, { HolderPassResourceQuery } from './Holder';
+import Holder from './Holder';
 import IMoveable from '../interfaces/IMovable';
 import Point from '../data/Point';
-import { AgentEventArgument, EventHandler, Time } from '../data/AgentEvent';
-import Process, { isProcess } from './Process';
-import { Command } from '../data/Command';
+import { EventHandler, Time } from '../data/AgentEvent';
+import { isProcess } from './Process';
 import Resource from '../data/material/Resource';
 import RandomInterval, { getRandomNumber } from '../data/RandomInterval';
+import LogisticRobotBusyReply from '../query/LogisticRobotBusyReply';
+import LogisticRobotReserveQuery from '../query/LogisticRobotReserveQuery';
+import LogisticRobotReserveReply from '../query/LogisticRobotReserveReply';
+import LogisticRobotMoveResult from '../query/LogisticRobotMoveResult';
+import LogisticRobotMoveQuery from '../query/LogisticRobotMoveQuery';
+import HolderPassResourceQuery from '../query/HolderPassResourceQuery';
 
 let counter = 0;
 
@@ -157,52 +162,3 @@ export default class LogisticRobot implements IAgent, IMoveable{
     }
 }
 
-export class LogisticRobotReserveQuery extends AgentEventArgument {
-    commandId: string
-    process: Process
-    constructor(commandId: string, process: Process) {
-        super()
-        this.commandId = commandId
-        this.process = process
-    }
-}
-
-export class LogisticRobotBusyReply extends AgentEventArgument {
-    isReady: boolean
-    id: string
-    constructor(isReady: boolean, id: string) {
-        super()
-        this.id = id
-        this.isReady = isReady
-    }
-}
-
-export class LogisticRobotReserveReply extends AgentEventArgument {
-    success: boolean
-    id: string
-    commandId: string
-    constructor(id: string, success: boolean, commandId: string) {
-        super()
-        this.id = id
-        this.success = success
-        this.commandId = commandId
-    }
-}
-
-export class LogisticRobotMoveQuery extends AgentEventArgument {
-    command: Command
-    callback: EventHandler
-    constructor(command: Command, callback: EventHandler) {
-        super()
-        this.command = command
-        this.callback = callback
-    }
-}
-
-export class LogisticRobotMoveResult extends AgentEventArgument {
-    commandId: string
-    constructor(commandId: string) {
-        super()
-        this.commandId = commandId
-    }
-}

@@ -1,9 +1,9 @@
 import { isOrder } from "../data/Order.js";
-import { AgentEventArgument } from "../data/AgentEvent.js";
 import ProductModelEnum from "../data/ProductModelEnum.js";
 import { getRandomNumber } from "../data/RandomInterval.js";
-export let designsInWorks = new Map();
-export let designsDone = new Map();
+import DesignerBusinessReply from "../query/DesignerBusinessReply.js";
+export const designsInWorks = new Map();
+export const designsDone = new Map();
 export function resetDesignsCounts() {
     designsInWorks.set(ProductModelEnum.Text, 0);
     designsInWorks.set(ProductModelEnum.Image, 0);
@@ -81,12 +81,5 @@ export default class Designer {
         this.getProcessMaker = getProcessMaker;
         this.communicationDelay = communicationDelay;
         this.plannerDurations = plannerDurations;
-    }
-}
-export class DesignerBusinessReply extends AgentEventArgument {
-    constructor(reply, id) {
-        super();
-        this.isReady = reply;
-        this.id = id;
     }
 }

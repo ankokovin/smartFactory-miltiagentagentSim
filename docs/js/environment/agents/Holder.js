@@ -1,10 +1,16 @@
-import { AgentEventArgument } from "../data/AgentEvent.js";
 import Detail from "../data/material/Detail.js";
 import Resource from "../data/material/Resource.js";
 import { getRandomNumber } from "../data/RandomInterval.js";
 import { isDetailType } from "../data/types/DetailType.js";
 import { randomInt } from "../utils.js";
+import HolderReserveQuery from "../query/HolderReserveQuery.js";
 import { isProcess } from "./Process.js";
+import HolderUnreserveQuery from "../query/HolderUnreserveQuery.js";
+import HolderAnnoucementReply from "../query/HolderAnnoucementReply.js";
+import HolderReserveResponse from "../query/HolderReserveResponse.js";
+import HolderSupplyQuery from "../query/HolderSupplyQuery.js";
+import HolderPassResourceQuery from "../query/HolderPassResourceQuery.js";
+import HolderSupplyResponse from "../query/HolderSupplyResponse.js";
 let idx = 0;
 export default class Holder {
     constructor(communicationDelay, position) {
@@ -98,9 +104,6 @@ export default class Holder {
         }
         this.resources.set(typeId, value);
     }
-    run() {
-        //    throw new Error("Not implemented")
-    }
     hasInput(input) {
         return this.resources.has(input.type.id);
     }
@@ -115,71 +118,6 @@ export default class Holder {
         return result;
     }
 }
-export class HolderReserveQuery extends AgentEventArgument {
-    constructor(type, targetQuantity, source, commandId) {
-        super();
-        this.type = type;
-        this.targetQuantity = targetQuantity;
-        this.source = source;
-        this.commandId = commandId;
-    }
-}
-export class HolderUnreserveQuery extends AgentEventArgument {
-    constructor(resource, source) {
-        super();
-        this.resource = resource;
-        this.source = source;
-    }
-}
-export class HolderReserveResponse extends AgentEventArgument {
-    constructor(id, result, commandId) {
-        super();
-        this.id = id;
-        this.result = result;
-        this.commandId = commandId;
-    }
-}
-export class HolderAnnoucementReply extends AgentEventArgument {
-    constructor(id, availableInputs) {
-        super();
-        this.id = id;
-        this.availableInputs = availableInputs;
-    }
-}
-export class HolderSupplyQuery extends AgentEventArgument {
-    constructor(source) {
-        super();
-        this.source = source;
-    }
-}
-export class HolderSupplyResponse extends AgentEventArgument {
-    constructor(id, resources) {
-        super();
-        this.id = id;
-        this.resources = resources;
-    }
-}
-export class HolderPassResourceQuery extends AgentEventArgument {
-    constructor(resource, callback) {
-        super();
-        this.resource = resource;
-        this.callback = callback;
-    }
-}
 export function isHolder(object) {
     return object === null || object === void 0 ? void 0 : object.id.startsWith('Holder');
-}
-export class ReservedHolder extends Holder {
-    constructor(communicationDelay, position) {
-        super(communicationDelay, position);
-        this.handleProcessAnnouncementHolder = () => {
-            return;
-        };
-    }
-    publicGetResource(r, q) {
-        return this.getResource(r, q);
-    }
-    getAllResources() {
-        return this.resources;
-    }
 }

@@ -10,8 +10,14 @@ import { isProductType } from "../data/types/ProductType";
 import IAgent from "../interfaces/IAgent";
 import ILocatable from "../interfaces/ILocatable";
 import { randomInt } from "../utils";
-import { ReservedHolder, ResourceCollection } from "./Holder";
+import { ReservedHolder } from "./ReservedHolder";
 import Process, { isProcess } from "./Process";
+import ProductionRobotReply from "../query/ProductionRobotReply";
+import ManifactureResult from "../query/ManifactureResult";
+import ProductionRobotReserveResult from "../query/ProductionRobotReserveResult";
+import ReservedStatus from "../query/ReservedStatus";
+import ReservedStatusQuery from "../query/ReservedStatusQuery";
+import StartManufactureQuery from "../query/StartManufactureQuery";
 
 let idx = 0;
 
@@ -125,35 +131,6 @@ export default class ProductionRobot implements IAgent, ILocatable {
     }
 }
 
-export class ProductionRobotReply {
-    isReady: boolean
-    id: string
-    constructor(isReady: boolean, id: string) {
-        this.id = id
-        this.isReady = isReady
-    }
-}
-
-export class ProductionRobotReserveResult extends AgentEventArgument {
-    id: string
-    success: boolean
-    constructor(id: string, success: boolean) {
-        super()
-        this.id = id
-        this.success = success
-    } 
-}
-
-export class StartManufactureQuery extends AgentEventArgument {
-    process: Process
-    callback: EventHandler
-    constructor(process: Process, callback: EventHandler) {
-        super()
-        this.process = process
-        this.callback = callback
-    }
-}
-
 class ManifactureDone extends AgentEventArgument {
     quantity: number
     type: DetailType
@@ -163,30 +140,6 @@ class ManifactureDone extends AgentEventArgument {
         this.quantity = quantity
         this.type = type
         this.callback = callback
-    }
-}
-
-export class ManifactureResult extends AgentEventArgument {
-    detail: Detail
-    constructor(detail: Detail) {
-        super()
-        this.detail = detail
-    }
-}
-
-export class ReservedStatusQuery extends AgentEventArgument {
-    callback: EventHandler
-    constructor(callback: EventHandler) {
-        super()
-        this.callback = callback
-    }
-}
-
-export class ReservedStatus extends AgentEventArgument {
-    resources: ResourceCollection
-    constructor(resources: ResourceCollection) {
-        super()
-        this.resources = resources
     }
 }
 

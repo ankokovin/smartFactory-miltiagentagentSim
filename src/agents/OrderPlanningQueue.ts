@@ -4,7 +4,8 @@ import Order, { isOrder } from '../data/Order';
 import RandomInterval, { getRandomNumber } from '../data/RandomInterval';
 
 import IAgent from "../interfaces/IAgent";
-import Designer, { DesignerBusinessReply } from './Designer';
+import Designer from './Designer';
+import DesignerBusinessReply from "../query/DesignerBusinessReply";
 
 export type GetAllDesigners = () => Designer[];
 

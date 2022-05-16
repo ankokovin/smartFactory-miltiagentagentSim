@@ -5,9 +5,10 @@ import ProductModelEnum from "../data/ProductModelEnum";
 import OrderPlanningQueue from "./OrderPlanningQueue";
 import { ProcessMaker } from "./ProcessMaker";
 import RandomInterval, { getRandomNumber } from "../data/RandomInterval";
+import DesignerBusinessReply from "../query/DesignerBusinessReply";
 
-export let designsInWorks = new Map<ProductModelEnum,number>()
-export let designsDone = new Map<ProductModelEnum, number>() 
+export const designsInWorks = new Map<ProductModelEnum,number>()
+export const designsDone = new Map<ProductModelEnum, number>() 
 export function resetDesignsCounts() {
     designsInWorks.set(ProductModelEnum.Text, 0)
     designsInWorks.set(ProductModelEnum.Image, 0)
@@ -105,13 +106,3 @@ export default class Designer implements IAgent {
     }
 }
 
-export class DesignerBusinessReply extends AgentEventArgument {
-    isReady: boolean
-    id: string
-
-    constructor(reply: boolean, id: string) {
-        super()
-        this.isReady = reply;
-        this.id = id;
-    }
-}

@@ -2,7 +2,9 @@ import Resource from "../data/material/Resource.js";
 import ResourceOrder from "../data/material/ResourceOrder.js";
 import { getRandomNumber } from "../data/RandomInterval.js";
 import { isResourceType } from "../data/types/ResourceType.js";
-import Holder, { HolderSupplyQuery, HolderSupplyResponse } from "./Holder.js";
+import Holder from "./Holder.js";
+import HolderSupplyQuery from "../query/HolderSupplyQuery.js";
+import HolderSupplyResponse from "../query/HolderSupplyResponse.js";
 let idx = 0;
 export default class Provider extends Holder {
     constructor(getHolders, getProcesses, getResourceTypeById, communicationDelay, providerArgs, position) {

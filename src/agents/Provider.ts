@@ -8,8 +8,11 @@ import RandomInterval, { getRandomNumber } from "../data/RandomInterval";
 import ResourceType, { isResourceType, ResourceTypeId } from "../data/types/ResourceType";
 import IAgent from "../interfaces/IAgent";
 import ILocatable from "../interfaces/ILocatable";
-import Holder, { HolderReserveQuery, HolderSupplyQuery, HolderSupplyResponse, ResourceCollection } from "./Holder";
+import Holder from "./Holder";
+import { ResourceCollection } from "../data/ResourceCollection";
 import Process from "./Process";
+import HolderSupplyQuery from "../query/HolderSupplyQuery";
+import HolderSupplyResponse from "../query/HolderSupplyResponse";
 
 let idx = 0;
 

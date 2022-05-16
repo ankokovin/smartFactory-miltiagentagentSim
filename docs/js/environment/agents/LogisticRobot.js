@@ -1,8 +1,12 @@
 import { randomInt } from "../utils.js";
-import { HolderPassResourceQuery } from "./Holder.js";
-import { AgentEventArgument } from "../data/AgentEvent.js";
 import { isProcess } from "./Process.js";
 import { getRandomNumber } from "../data/RandomInterval.js";
+import LogisticRobotBusyReply from "../query/LogisticRobotBusyReply.js";
+import LogisticRobotReserveQuery from "../query/LogisticRobotReserveQuery.js";
+import LogisticRobotReserveReply from "../query/LogisticRobotReserveReply.js";
+import LogisticRobotMoveResult from "../query/LogisticRobotMoveResult.js";
+import LogisticRobotMoveQuery from "../query/LogisticRobotMoveQuery.js";
+import HolderPassResourceQuery from "../query/HolderPassResourceQuery.js";
 let counter = 0;
 export default class LogisticRobot {
     constructor(speed, internalEventDelay, communicationDelay, position) {
@@ -132,40 +136,5 @@ export default class LogisticRobot {
             });
             return false;
         }
-    }
-}
-export class LogisticRobotReserveQuery extends AgentEventArgument {
-    constructor(commandId, process) {
-        super();
-        this.commandId = commandId;
-        this.process = process;
-    }
-}
-export class LogisticRobotBusyReply extends AgentEventArgument {
-    constructor(isReady, id) {
-        super();
-        this.id = id;
-        this.isReady = isReady;
-    }
-}
-export class LogisticRobotReserveReply extends AgentEventArgument {
-    constructor(id, success, commandId) {
-        super();
-        this.id = id;
-        this.success = success;
-        this.commandId = commandId;
-    }
-}
-export class LogisticRobotMoveQuery extends AgentEventArgument {
-    constructor(command, callback) {
-        super();
-        this.command = command;
-        this.callback = callback;
-    }
-}
-export class LogisticRobotMoveResult extends AgentEventArgument {
-    constructor(commandId) {
-        super();
-        this.commandId = commandId;
     }
 }

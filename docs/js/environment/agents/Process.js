@@ -1,15 +1,27 @@
 import Point from "../data/Point.js";
-import { ManifactureResult, ProductionRobotReply, ProductionRobotReserveResult, ReservedStatus, ReservedStatusQuery, StartManufactureQuery } from "./ProductionRobot.js";
+import ManifactureResult from "../query/ManifactureResult.js";
+import ProductionRobotReply from "../query/ProductionRobotReply.js";
 import { chooseClosest, Dist } from "../interfaces/ILocatable.js";
-import { LogisticRobotBusyReply, LogisticRobotMoveQuery, LogisticRobotMoveResult, LogisticRobotReserveQuery, LogisticRobotReserveReply } from "./LogisticRobot.js";
+import LogisticRobotBusyReply from "../query/LogisticRobotBusyReply.js";
 import { isResourceType } from "../data/types/ResourceType.js";
 import { isOrder } from "../data/Order.js";
 import { getRandom } from "../utils.js";
 import { isDetailType } from "../data/types/DetailType.js";
-import { HolderAnnoucementReply, HolderReserveQuery, HolderReserveResponse, HolderUnreserveQuery } from "./Holder.js";
+import HolderAnnoucementReply from "../query/HolderAnnoucementReply.js";
+import HolderUnreserveQuery from "../query/HolderUnreserveQuery.js";
+import HolderReserveQuery from "../query/HolderReserveQuery.js";
 import { Command } from "../data/Command.js";
 import { Plan } from "../data/Plan.js";
 import { getRandomNumber } from "../data/RandomInterval.js";
+import HolderReserveResponse from "../query/HolderReserveResponse.js";
+import LogisticRobotMoveQuery from "../query/LogisticRobotMoveQuery.js";
+import LogisticRobotMoveResult from "../query/LogisticRobotMoveResult.js";
+import LogisticRobotReserveQuery from "../query/LogisticRobotReserveQuery.js";
+import LogisticRobotReserveReply from "../query/LogisticRobotReserveReply.js";
+import ProductionRobotReserveResult from "../query/ProductionRobotReserveResult.js";
+import ReservedStatus from "../query/ReservedStatus.js";
+import ReservedStatusQuery from "../query/ReservedStatusQuery.js";
+import StartManufactureQuery from "../query/StartManufactureQuery.js";
 let idx = 0;
 export default class Process {
     constructor(quantity, type, source, GetProductionAgents, GetHolders, GetLogisticRobots, GetCustomer, createNewProcesses, communicationDelay, internalEventDelay, processRandomParam) {
