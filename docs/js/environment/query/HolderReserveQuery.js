@@ -1,4 +1,4 @@
-import { AgentEventArgument } from "../data/AgentEvent";
+import { AgentEventArgument } from "../data/AgentEvent.js";
 export default class HolderReserveQuery extends AgentEventArgument {
     constructor(type, targetQuantity, source, commandId) {
         super();

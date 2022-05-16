@@ -1,4 +1,4 @@
-import { AgentEventArgument } from "../data/AgentEvent";
+import { AgentEventArgument } from "../data/AgentEvent.js";
 export default class HolderSupplyResponse extends AgentEventArgument {
     constructor(id, resources) {
         super();

@@ -24,6 +24,7 @@ fix_dir "./docs/js/environment/data/material/*.js"
 fix_dir "./docs/js/environment/data/process/*.js"
 fix_dir "./docs/js/environment/data/types/*.js"
 fix_dir "./docs/js/environment/interfaces/*.js"
+fix_dir "./docs/js/environment/query/*.js"
 
 sed -i -E 's,import PriorityQueue from "typescript-collections/dist/lib/PriorityQueue.js";,import PriorityQueue from "./lib/typescript-collections/PriorityQueue.js",' "./docs/js/environment/Environment.js"
 sed -i -E 's,import PriorityQueue from "typescript-collections/dist/lib/PriorityQueue.js";,import PriorityQueue from "../lib/typescript-collections/PriorityQueue.js",' "./docs/js/environment/agents/OrderPlanningQueue.js"
